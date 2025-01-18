@@ -1,0 +1,37 @@
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Which login provider the user is using
+enum AuthProvider {
+  /// classic email + password combo
+  local
+  google
+}
+
+model Account {
+  id       String       @id @default(uuid())
+  /// An account created through Google or other providers won't have a username immediately
+  /// We need to create the account and then prompt the user for a username
+  username String?      @unique
+  email    String       @unique
+  provider AuthProvider
+
+  /// If Provider is not AuthProvider.local, we won't have a password for that Account
+  password String?
+
+  // TODO: I don't think we need first and last names
+  firstName String?
+  lastName  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
