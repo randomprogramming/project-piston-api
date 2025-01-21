@@ -63,9 +63,23 @@ export default class AccountRepository {
         return this.prisma.account.findFirst({
             where: {
                 email: {
+                    // TODO: Maybe bad idea to search case insensitive
+                    // Instead maybe better idea is to do lowercase() on email before saving it to database
                     equals: email,
                     mode: "insensitive",
                 },
+                provider: AuthProvider.local,
+                NOT: {
+                    password: null,
+                },
+            },
+        });
+    };
+
+    public findByUsernameWhereProviderLocal = (username: string) => {
+        return this.prisma.account.findFirst({
+            where: {
+                username,
                 provider: AuthProvider.local,
                 NOT: {
                     password: null,

@@ -20,8 +20,11 @@ export function parseRegisterBody(obj: any) {
 }
 export type RegistrationDataDto = z.infer<typeof RegistrationData>;
 
+/**
+ * Handle may be either username or email
+ */
 const LoginData = z.object({
-    email: email(),
+    handle: z.string(),
     password: z.string(),
 });
 export function parseLoginBody(obj: any) {

@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import type { Account } from "@prisma/client";
 import type AccountRepository from "../repository/AccountRepository";
 import { parseLoginBody, parseRegisterBody } from "../dto/account";
 import logger from "../logger";
@@ -71,17 +72,30 @@ export default class AuthRouter extends BaseRouter {
     };
 
     public login = async (req: Request, res: Response) => {
-        const { email, password } = parseLoginBody(req.body);
-        const account =
-            await this.accountRepo.findByEmailCaseInsensitiveWhereProviderLocal(
-                email
-            );
+        const { handle, password } = parseLoginBody(req.body);
+        let account: Account | null = null;
 
-        if (!account) {
-            return ResponseErrorMessageBuilder.account()
-                .addDetail("email", "not_found")
-                .log("login", `Email not found '${hideEmail(email)}'`)
-                .send(res);
+        if (handle.includes("@")) {
+            account =
+                await this.accountRepo.findByEmailCaseInsensitiveWhereProviderLocal(
+                    handle
+                );
+            if (!account) {
+                return ResponseErrorMessageBuilder.account()
+                    .addDetail("email", "not_found")
+                    .log("login", `Email not found '${hideEmail(handle)}'`)
+                    .send(res);
+            }
+        } else {
+            account = await this.accountRepo.findByUsernameWhereProviderLocal(
+                handle
+            );
+            if (!account) {
+                return ResponseErrorMessageBuilder.account()
+                    .addDetail("username", "not_found")
+                    .log("login", `Username not found '${handle}'`)
+                    .send(res);
+            }
         }
 
         // TODO: Account activation, remember only local accounts need activation, google accounts do not.
@@ -94,10 +108,10 @@ export default class AuthRouter extends BaseRouter {
         );
 
         if (!compareResult) {
-            // Tell the user the account is not found when password is wrong, to avoid email attacks
+            const logHandle = handle.includes("@") ? hideEmail(handle) : handle;
             return ResponseErrorMessageBuilder.account()
-                .addDetail("email", "not_found")
-                .log("login", `Invalid password for '${hideEmail(email)}'`)
+                .addDetail("email", "not_found") // Tell the user the account is not found when password is wrong, to avoid email attacks
+                .log("login", `Invalid password for '${logHandle}'`)
                 .send(res);
         }
 
