@@ -1,5 +1,6 @@
 import type BaseRouter from "./router/BaseRouter";
 import express, { type Express } from "express";
+import cors from "cors";
 import { PrismaClient } from "@prisma/client";
 import { NODE_ENV, PORT } from "./env";
 import logger from "./logger";
@@ -25,6 +26,7 @@ export default class Server {
     private setupMiddleware() {
         logger.info("Setting up middleware...");
 
+        this.app.use(cors());
         this.app.use(express.json());
         this.app.use(initAuthMiddleware(this.accountRepo));
     }

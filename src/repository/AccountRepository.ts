@@ -26,10 +26,7 @@ export default class AccountRepository {
     };
 
     public createGoogle = (
-        account: Omit<
-            RegistrationDataDto,
-            "username" | "password" | "confirmPassword"
-        >
+        account: Omit<RegistrationDataDto, "username" | "password">
     ) => {
         return this.create({
             username: null,

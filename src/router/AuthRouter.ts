@@ -54,7 +54,7 @@ export default class AuthRouter extends BaseRouter {
 
         const hashedPass = await hashPass(registerBody.password);
         // @ts-ignore: Deleting password to make 100% sure we don't accidentaly log or use it somewhere..
-        delete registerBody.password, registerBody.confirmPassword;
+        delete registerBody.password;
 
         const existsByEmail =
             await this.accountRepo.existsByEmailCaseInsensitive(

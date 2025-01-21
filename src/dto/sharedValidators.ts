@@ -5,7 +5,7 @@ export const username = () =>
     z
         .string()
         .regex(/^[a-zA-Z0-9]*$/) // Only letters and numbers are allowed
-        .min(8)
+        .min(3)
         .max(24);
 export const validPassword = () => z.string().min(10).max(128);
 
