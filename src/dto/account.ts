@@ -1,18 +1,10 @@
 import { z } from "zod";
-import {
-    email,
-    nullableString,
-    username,
-    validPassword,
-} from "./sharedValidators";
+import { email, username, validPassword } from "./sharedValidators";
 
 const RegistrationData = z.object({
     email: email(),
     username: username(),
     password: validPassword(),
-    // TODO: I don't think we need first and last names
-    firstName: nullableString(),
-    lastName: nullableString(),
 });
 
 export function parseRegisterBody(obj: any) {

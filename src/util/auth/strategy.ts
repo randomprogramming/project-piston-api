@@ -80,8 +80,6 @@ export function buildGoogleStrategy(accountRepo: AccountRepository) {
 
             const createdAccount = await accountRepo.createGoogle({
                 email: email,
-                firstName: profile.name?.givenName || null,
-                lastName: profile.name?.familyName || null,
             });
             if (!createdAccount) {
                 logger.error(

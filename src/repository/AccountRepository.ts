@@ -18,8 +18,6 @@ export default class AccountRepository {
         return this.create({
             username: account.username,
             email: account.email,
-            firstName: account.firstName,
-            lastName: account.lastName,
             provider: AuthProvider.local,
             password: passwordHash,
         });
@@ -31,8 +29,6 @@ export default class AccountRepository {
         return this.create({
             username: null,
             email: account.email,
-            firstName: account.firstName,
-            lastName: account.lastName,
             provider: AuthProvider.google,
             password: null,
         });

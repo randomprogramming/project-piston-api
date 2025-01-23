@@ -28,9 +28,103 @@ model Account {
   /// If Provider is not AuthProvider.local, we won't have a password for that Account
   password String?
 
-  // TODO: I don't think we need first and last names
-  firstName String?
-  lastName  String?
+  auctions Auction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CarBrand {
+  name String @id
+
+  models CarModel[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model CarModel {
+  name         String
+  carBrandName String
+
+  brand                 CarBrand                @relation(fields: [carBrandName], references: [name])
+  auctionCarInformation AuctionCarInformation[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([name, carBrandName])
+}
+
+/// The AuctionCarInformation model represents a set of data about the car, with a 1:1 relation to an Auction
+/// user-entered fields (`ueCarBrand` and `ueCarModel`) 
+/// verified fields (`carBrandName` and `carModelName`), which may 
+///
+/// - `ueCarBrand` and `ueCarModel`: Capture raw input from the user at the time of submission
+///
+/// - `carBrandName` and `carModelName`: Link to the `CarBrand` and `CarModel` tables, respectively, after admin approval.
+model AuctionCarInformation {
+  id String @id @default(uuid())
+
+  vin        String
+  /// user entry(ue) car brand, once the auction is verified, we either create that brand or we connect it a existing brand
+  ueCarBrand String
+  /// user entry(ue) car model, once the auction is verified, we either create that model or we connect it a existing model
+  ueCarModel String
+  modelYear  Int
+  /// Exact trim of the model: GTI, GT3RS, Competition, etc.
+  trim       String?
+  /// in km
+  mileage    Int
+
+  carModel     CarModel? @relation(fields: [carModelName, carBrandName], references: [name, carBrandName])
+  carModelName String?
+  carBrandName String?
+  auction      Auction?
+  auctionId    String    @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum ContactType {
+  PRIVATE
+  DEALER
+}
+
+model ContactDetails {
+  id String @id @default(uuid())
+
+  /// If type is private, name is full name of the private person
+  name       String?
+  /// If type is dealer, name is name of the delaership/company
+  dealerName String?
+  type       ContactType
+  phone      String
+
+  auction   Auction?
+  auctionId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum AuctionState {
+  SUBMITTED
+  LIVE
+}
+
+model Auction {
+  id String @id @default(uuid())
+
+  state AuctionState
+
+  carInformation   AuctionCarInformation @relation(fields: [carInformationId], references: [id])
+  carInformationId String                @unique
+  seller           Account               @relation(fields: [accountId], references: [id])
+  accountId        String
+  contactDetails   ContactDetails        @relation(fields: [contactDetailsId], references: [id])
+  contactDetailsId String                @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
