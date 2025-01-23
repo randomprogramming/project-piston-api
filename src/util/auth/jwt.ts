@@ -8,9 +8,11 @@ import { JWT_SECRET_KEY } from "../../env";
  */
 export interface JWTPayload {
     id: string;
+    email: string;
+    username: string | null;
+    // TODO: I don't think we need firstname and lastname
     firstName: string | null;
     lastName: string | null;
-    email: string;
 }
 export function isValidJWTPayload(obj: any): obj is JWTPayload {
     if (typeof obj.id !== "string" || obj.id.length <= 0) {
@@ -26,6 +28,7 @@ export function isValidJWTPayload(obj: any): obj is JWTPayload {
 export function accountToJwtPayload(account: Account): JWTPayload {
     return {
         id: account.id,
+        username: account.username,
         email: account.email,
         firstName: account.firstName,
         lastName: account.lastName,
@@ -40,6 +43,7 @@ export function generateJWT(payload: any) {
     return json.sign(
         {
             id: payload.id,
+            username: payload.username,
             email: payload.email,
             firstName: payload.firstName,
             lastName: payload.lastName,
