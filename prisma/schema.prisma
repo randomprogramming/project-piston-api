@@ -81,7 +81,7 @@ model AuctionCarInformation {
   carModelName String?
   carBrandName String?
   auction      Auction?
-  auctionId    String    @unique
+  auctionId    String?   @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -103,7 +103,7 @@ model ContactDetails {
   phone      String
 
   auction   Auction?
-  auctionId String
+  auctionId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -112,6 +112,7 @@ model ContactDetails {
 enum AuctionState {
   SUBMITTED
   LIVE
+  REJECTED
 }
 
 model Auction {
@@ -121,8 +122,8 @@ model Auction {
 
   carInformation   AuctionCarInformation @relation(fields: [carInformationId], references: [id])
   carInformationId String                @unique
-  seller           Account               @relation(fields: [accountId], references: [id])
-  accountId        String
+  seller           Account               @relation(fields: [sellerId], references: [id])
+  sellerId         String
   contactDetails   ContactDetails        @relation(fields: [contactDetailsId], references: [id])
   contactDetailsId String                @unique
 
