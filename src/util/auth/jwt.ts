@@ -1,4 +1,4 @@
-import type { Account } from "@prisma/client";
+import type { Account, Role } from "@prisma/client";
 import { InvalidJwtPayload } from "./exception";
 import json from "jsonwebtoken";
 import { JWT_SECRET_KEY } from "../../env";
@@ -10,6 +10,7 @@ export interface JWTPayload {
     id: string;
     email: string;
     username: string | null;
+    role: Role;
 }
 export function isValidJWTPayload(obj: any): obj is JWTPayload {
     if (typeof obj.id !== "string" || obj.id.length <= 0) {
@@ -27,6 +28,7 @@ export function accountToJwtPayload(account: Account): JWTPayload {
         id: account.id,
         username: account.username,
         email: account.email,
+        role: account.role,
     };
 }
 
@@ -34,13 +36,11 @@ export function generateJWT(payload: any) {
     if (!isValidJWTPayload(payload)) {
         throw new InvalidJwtPayload(payload);
     }
-
-    return json.sign(
-        {
-            id: payload.id,
-            username: payload.username,
-            email: payload.email,
-        },
-        JWT_SECRET_KEY
-    );
+    const payloadCast: JWTPayload = {
+        id: payload.id,
+        username: payload.username,
+        email: payload.email,
+        role: payload.role,
+    };
+    return json.sign(payloadCast, JWT_SECRET_KEY);
 }

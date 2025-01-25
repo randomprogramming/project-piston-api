@@ -17,6 +17,11 @@ enum AuthProvider {
   google
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 model Account {
   id       String       @id @default(uuid())
   /// An account created through Google or other providers won't have a username immediately
@@ -24,9 +29,9 @@ model Account {
   username String?      @unique
   email    String       @unique
   provider AuthProvider
-
   /// If Provider is not AuthProvider.local, we won't have a password for that Account
   password String?
+  role     Role         @default(USER)
 
   auctions Auction[]
 
