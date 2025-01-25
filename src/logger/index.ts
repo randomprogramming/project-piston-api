@@ -1,5 +1,5 @@
 import winston from "winston";
-
+// TODO: Log to file too
 const timestampLog = winston.format.printf(({ level, message, timestamp }) => {
     return `[${timestamp}] ${level}: ${message}`;
 });

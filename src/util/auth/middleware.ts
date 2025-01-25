@@ -1,8 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
 import type { AuthenticateOptionsGoogle } from "passport-google-oauth20";
 import passport from "passport";
-import { AuthProvider } from "@prisma/client";
+import { AuthProvider, Role } from "@prisma/client";
 import { RequestNoUser } from "./exception";
+import HttpStatus from "../../HttpStatus";
 
 /**
  * Do not use this! This is exclusively used for initial authentication with Google OAuth.
@@ -27,4 +28,18 @@ export function auth() {
             next();
         },
     ];
+}
+
+export function hasRole(r: Role) {
+    return (req: Request, res: Response, next: NextFunction) => {
+        if (req.user?.role !== r) {
+            res.status(HttpStatus.Unauthorized).send();
+            return;
+        }
+        next();
+    };
+}
+
+export function hasAdminRole() {
+    return hasRole(Role.ADMIN);
 }

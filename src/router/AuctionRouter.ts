@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import type AuctionRepository from "../repository/AuctionRepository";
 import BaseRouter, { API_VERSION } from "./BaseRouter";
-import { auth } from "../util/auth/middleware";
+import { auth, hasAdminRole } from "../util/auth/middleware";
 import { parseAuctionDto } from "../dto/auction";
 import HttpStatus from "../HttpStatus";
 
@@ -10,6 +10,12 @@ export default class AuctionRouter extends BaseRouter {
         super(API_VERSION.V1, "/auction");
 
         this.router.post("/submit", auth(), this.submitAuction);
+        this.router.get(
+            "/admin/submitted",
+            auth(),
+            hasAdminRole(),
+            this.getSubmittedAuctions
+        );
     }
 
     public submitAuction = async (req: Request, res: Response) => {
@@ -22,5 +28,12 @@ export default class AuctionRouter extends BaseRouter {
         );
 
         res.status(HttpStatus.Created).send(id);
+    };
+
+    public getSubmittedAuctions = async (req: Request, res: Response) => {
+        const auctions =
+            await this.auctionRepo.findAllWhereStateIsSubmittedLimit10OrderByNewest();
+
+        res.json(auctions);
     };
 }

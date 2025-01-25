@@ -115,8 +115,12 @@ model ContactDetails {
 }
 
 enum AuctionState {
+  /// The initial state when a used first submits an auction, which then needs to be approved by an admin
   SUBMITTED
+  /// State when the auction is approved, live and can be publicly seen by anyone
   LIVE
+  /// Auction has been rejected for some reason
+  // TODO: We should somewhere save the reason why it was rejected
   REJECTED
 }
 

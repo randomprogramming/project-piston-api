@@ -41,4 +41,16 @@ export default class AuctionRepository {
             return auction;
         });
     };
+
+    public findAllWhereStateIsSubmittedLimit10OrderByNewest = async () => {
+        return this.prisma.auction.findMany({
+            where: {
+                state: AuctionState.SUBMITTED,
+            },
+            take: 10,
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+    };
 }
