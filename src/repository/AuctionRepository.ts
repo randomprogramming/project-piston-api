@@ -42,15 +42,27 @@ export default class AuctionRepository {
         });
     };
 
-    public findAllWhereStateIsSubmittedLimit10OrderByNewest = async () => {
-        return this.prisma.auction.findMany({
-            where: {
-                state: AuctionState.SUBMITTED,
-            },
-            take: 10,
-            orderBy: {
-                createdAt: "desc",
-            },
-        });
-    };
+    public findAllWhereStateIsSubmittedLimit10OrderByNewestIncludeAll =
+        async () => {
+            return this.prisma.auction.findMany({
+                where: {
+                    state: AuctionState.SUBMITTED,
+                },
+                include: {
+                    carInformation: true,
+                    contactDetails: true,
+                    seller: {
+                        omit: {
+                            password: true,
+                            provider: true,
+                            role: true,
+                        },
+                    },
+                },
+                take: 10,
+                orderBy: {
+                    createdAt: "desc",
+                },
+            });
+        };
 }

@@ -30,9 +30,9 @@ export default class AuctionRouter extends BaseRouter {
         res.status(HttpStatus.Created).send(id);
     };
 
-    public getSubmittedAuctions = async (req: Request, res: Response) => {
+    public getSubmittedAuctions = async (_req: Request, res: Response) => {
         const auctions =
-            await this.auctionRepo.findAllWhereStateIsSubmittedLimit10OrderByNewest();
+            await this.auctionRepo.findAllWhereStateIsSubmittedLimit10OrderByNewestIncludeAll();
 
         res.json(auctions);
     };
