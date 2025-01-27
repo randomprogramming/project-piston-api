@@ -1,9 +1,10 @@
 import type BaseRouter from "./router/BaseRouter";
+import type { ImageStorage } from "./imagestorage/ImageStorage";
 import express, { type Express, type Request } from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { PrismaClient } from "@prisma/client";
-import { NODE_ENV, PORT } from "./env";
+import { Environment, NODE_ENV, PORT } from "./env";
 import logger from "./logger";
 import PingRouter from "./router/PingRouter";
 import { initAuthMiddleware } from "./util/auth";
@@ -12,6 +13,8 @@ import AccountRepository from "./repository/AccountRepository";
 import errorHandling from "./middleware/errorHandling";
 import AuctionRouter from "./router/AuctionRouter";
 import AuctionRepository from "./repository/AuctionRepository";
+import LocalImageStorageService from "./imagestorage/LocalImageStorage";
+import MediaRepository from "./repository/MediaRepository";
 
 export default class Server {
     private app: Express;
@@ -19,6 +22,9 @@ export default class Server {
 
     private accountRepo: AccountRepository;
     private auctionRepo: AuctionRepository;
+    private mediaRepo: MediaRepository;
+
+    private imageStorage: ImageStorage;
 
     constructor() {
         this.app = express();
@@ -26,6 +32,9 @@ export default class Server {
 
         this.accountRepo = new AccountRepository(this.prismaClient);
         this.auctionRepo = new AuctionRepository(this.prismaClient);
+        this.mediaRepo = new MediaRepository(this.prismaClient);
+
+        this.imageStorage = new LocalImageStorageService("/images/auctions");
     }
 
     private setupMiddleware() {
@@ -55,7 +64,11 @@ export default class Server {
         const ALL_ROUTERS: BaseRouter[] = [
             new PingRouter(),
             new AuthRouter(this.accountRepo),
-            new AuctionRouter(this.auctionRepo),
+            new AuctionRouter(
+                this.auctionRepo,
+                this.mediaRepo,
+                this.imageStorage
+            ),
         ];
 
         for (const router of ALL_ROUTERS) {
@@ -63,6 +76,10 @@ export default class Server {
                 `Registering router with endpoint '${router.getPath()}'`
             );
             this.app.use(router.getPath(), router.getRouter());
+        }
+        if (NODE_ENV === Environment.development) {
+            logger.warn("Exposing static files from ./public folder");
+            this.app.use("/", express.static("./public"));
         }
     }
 

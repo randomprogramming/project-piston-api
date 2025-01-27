@@ -115,8 +115,12 @@ model ContactDetails {
 }
 
 enum AuctionState {
-  /// The initial state when a used first submits an auction, which then needs to be approved by an admin
+  /// The initial state when a user first submits an auction with some basic info, which then needs to be approved by an admin
   SUBMITTED
+  /// After the auction has been approved by an admin, we ask for photos of the car, and we might also ask
+  /// the seller for some more information about the car. All of this is "YELLOW" state, where we might have a bunch
+  /// of back-and-forth with the seller in order to perfect the listing
+  YELLOW
   /// State when the auction is approved, live and can be publicly seen by anyone
   LIVE
   /// Auction has been rejected for some reason
@@ -135,6 +139,24 @@ model Auction {
   sellerId         String
   contactDetails   ContactDetails        @relation(fields: [contactDetailsId], references: [id])
   contactDetailsId String                @unique
+  media            Media[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Media {
+  id String @id @default(uuid())
+
+  /// Relative path to the media: "/images/auctions/auction-id-1/image1.jpg"
+  path String
+  /// Full URL to the media: "http://localhost:8080/images/auctions/auction-id-1/image1.jpg"
+  /// I chose to do it this way because I am not sure where I will be hosting the images, and it may change in the future
+  /// Also it's easier for the frontend.
+  url  String @unique
+
+  auctionId String?
+  auction   Auction? @relation(fields: [auctionId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

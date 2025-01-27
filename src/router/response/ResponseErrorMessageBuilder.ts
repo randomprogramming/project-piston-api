@@ -18,6 +18,9 @@ export default class ResponseErrorMessageBuilder {
     static account() {
         return new ResponseErrorMessageBuilder("account");
     }
+    static auction() {
+        return new ResponseErrorMessageBuilder("auction");
+    }
 
     private getMessage(): string {
         return [

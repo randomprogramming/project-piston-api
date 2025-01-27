@@ -51,6 +51,7 @@ export default class AuctionRepository {
                 include: {
                     carInformation: true,
                     contactDetails: true,
+                    media: true,
                     seller: {
                         omit: {
                             password: true,
