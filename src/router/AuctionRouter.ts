@@ -26,10 +26,10 @@ export default class AuctionRouter extends BaseRouter {
             this.submitAuction
         );
         this.router.get(
-            "/admin/submitted",
+            "/admin/pending",
             auth(),
             hasAdminRole(),
-            this.getSubmittedAuctions
+            this.getPendingAuctions
         );
     }
 
@@ -42,7 +42,7 @@ export default class AuctionRouter extends BaseRouter {
                 .send(res);
         }
 
-        const { id } = await this.auctionRepo.create(
+        const { id } = await this.auctionRepo.createWithStateSubmitted(
             req.user!.id,
             auctionDto.carInformation,
             auctionDto.contactDetails
@@ -62,9 +62,13 @@ export default class AuctionRouter extends BaseRouter {
         res.status(HttpStatus.Created).send(id);
     };
 
-    public getSubmittedAuctions = async (_req: Request, res: Response) => {
+    /**
+     * Pending auctions are auctions with state "SUBMITTED" or "UNDER_REVIEW", both of which can be
+     * accepted and rejected by an admin.
+     */
+    public getPendingAuctions = async (_req: Request, res: Response) => {
         const auctions =
-            await this.auctionRepo.findAllWhereStateIsSubmittedLimit10OrderByNewestIncludeAll();
+            await this.auctionRepo.findAllWhereStateIsSubmittedOrUnder_ReviewLimit10OrderByUpdatedAtIncludeAll();
 
         res.json(auctions);
     };

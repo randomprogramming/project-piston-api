@@ -7,7 +7,7 @@ import type {
 export default class AuctionRepository {
     constructor(private prisma: PrismaClient) {}
 
-    public create = async (
+    public createWithStateSubmitted = async (
         sellerId: string,
         carInformationDto: AuctionCarInformationDto,
         contactDetailsDto: AuctionContactDetailsDto
@@ -42,11 +42,13 @@ export default class AuctionRepository {
         });
     };
 
-    public findAllWhereStateIsSubmittedLimit10OrderByNewestIncludeAll =
+    public findAllWhereStateIsSubmittedOrUnder_ReviewLimit10OrderByUpdatedAtIncludeAll =
         async () => {
             return this.prisma.auction.findMany({
                 where: {
-                    state: AuctionState.SUBMITTED,
+                    state: {
+                        in: [AuctionState.SUBMITTED, AuctionState.UNDER_REVIEW],
+                    },
                 },
                 include: {
                     carInformation: true,
@@ -62,7 +64,7 @@ export default class AuctionRepository {
                 },
                 take: 10,
                 orderBy: {
-                    createdAt: "desc",
+                    updatedAt: "desc",
                 },
             });
         };

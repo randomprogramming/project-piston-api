@@ -115,13 +115,16 @@ model ContactDetails {
 }
 
 enum AuctionState {
-  /// The initial state when a user first submits an auction with some basic info, which then needs to be approved by an admin
+  /// The initial state when a user first submits an auction with only basic info, which then needs to be approved by an admin
   SUBMITTED
   /// After the auction has been approved by an admin, we ask for photos of the car, and we might also ask
-  /// the seller for some more information about the car. All of this is "YELLOW" state, where we might have a bunch
-  /// of back-and-forth with the seller in order to perfect the listing
-  YELLOW
-  /// State when the auction is approved, live and can be publicly seen by anyone
+  /// the seller for some more information about the car. It is possible that an auction will return to this state multiple times
+  /// as a seller might provide incorrect or insufficient information about a car multiple times
+  PENDING_CHANGES
+  /// After the user submits their photos and other info, the state goes to UNDER_REVIEW, where an admin has to again
+  /// look at the auction and decide if the auction is ready to go LIVE or back to PENDING_CHANGES
+  UNDER_REVIEW
+  /// Auction is live and can be publicly seen
   LIVE
   /// Auction has been rejected for some reason
   // TODO: We should somewhere save the reason why it was rejected
