@@ -1,13 +1,13 @@
 import { z } from "zod";
-import { nullableString } from "./sharedValidators";
+import { mileage, modelYear, nullableString } from "./sharedValidators";
 
 const AuctionCarInformationSchema = z.object({
     vin: z.string(),
     ueCarBrand: z.string(),
     ueCarModel: z.string(),
-    modelYear: z.coerce.number().min(1885).max(3000),
+    modelYear: modelYear(),
     trim: nullableString(),
-    mileage: z.coerce.number().min(0),
+    mileage: mileage(),
     carModelName: nullableString(),
     carBrandName: nullableString(),
 });
@@ -35,3 +35,21 @@ export function parseAuctionDto(obj: any) {
     return AuctionSchema.parse(obj);
 }
 export type AuctionDto = z.infer<typeof AuctionSchema>;
+
+// const PatchableCarInformationSchema = z.object({
+//     vin: z.optional(z.string()),
+//     modelYear: z.optional(modelYear()),
+//     trim: z.optional(nullableString()),
+//     mileage: z.optional(mileage()),
+//     carModelName: z.optional(nullableString()),
+//     carBrandName: z.optional(nullableString()),
+// });
+
+// const PatchableAuctionSchema = z.object({
+//     carInformation: z.lazy(() => PatchableCarInformationSchema),
+// });
+
+// export function parseAuctionPatchData(obj: any) {
+//     return PatchableAuctionSchema.parse(obj);
+// }
+// export type AuctionPatchData = z.infer<typeof PatchableAuctionSchema>;

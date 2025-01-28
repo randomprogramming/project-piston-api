@@ -68,4 +68,51 @@ export default class AuctionRepository {
                 },
             });
         };
+
+    public findById = async (id: string) => {
+        return this.prisma.auction.findFirst({
+            where: {
+                id,
+            },
+        });
+    };
+
+    // public updateById = async (id: string, data: AuctionPatchData) => {
+    //     return this.prisma.auction.update({
+    //         data: {
+    //             carInformation: {
+    //                 update: {
+    //                     ...data.carInformation,
+    //                 },
+    //             },
+    //         },
+    //         where: {
+    //             id,
+    //         },
+    //     });
+    // };
+
+    public updateStateById = async (id: string, newState: AuctionState) => {
+        return this.prisma.auction.update({
+            data: {
+                state: newState,
+            },
+            where: {
+                id,
+            },
+        });
+    };
+
+    public findBySellerIdIncludeAll = async (sellerId: string) => {
+        return this.prisma.auction.findMany({
+            where: {
+                sellerId,
+            },
+            include: {
+                carInformation: true,
+                contactDetails: true,
+                media: true,
+            },
+        });
+    };
 }

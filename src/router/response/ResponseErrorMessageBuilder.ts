@@ -30,6 +30,10 @@ export default class ResponseErrorMessageBuilder {
         ].join("::");
     }
 
+    /**
+     * Add details about the error, and the details will be returned to the frontend, so do not include any sensitive info here
+     * You can use @function log for logging sensitive info
+     */
     public addDetail(...details: string[]) {
         this.details.push(...details);
         return this;
@@ -48,7 +52,7 @@ export default class ResponseErrorMessageBuilder {
         return this;
     }
 
-    public send(res: Response) {
-        res.status(HttpStatus.BadRequest).send(this.getMessage());
+    public send(res: Response, status: HttpStatus = HttpStatus.BadRequest) {
+        res.status(status).send(this.getMessage());
     }
 }

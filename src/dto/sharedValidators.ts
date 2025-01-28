@@ -19,3 +19,6 @@ export const nullableString = (max?: number) =>
         .max(max || 128)
         .nullish()
         .transform((x) => (x && x.length > 0 ? x : null));
+
+export const modelYear = () => z.coerce.number().min(1885).max(3000);
+export const mileage = () => z.coerce.number().min(0);
