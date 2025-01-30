@@ -55,10 +55,8 @@ export default class AuctionRepository {
                     contactDetails: true,
                     media: true,
                     seller: {
-                        omit: {
-                            password: true,
-                            provider: true,
-                            role: true,
+                        select: {
+                            username: true,
                         },
                     },
                 },
@@ -73,6 +71,24 @@ export default class AuctionRepository {
         return this.prisma.auction.findFirst({
             where: {
                 id,
+            },
+        });
+    };
+
+    public findByIdIncludeAll = async (id: string) => {
+        return this.prisma.auction.findFirst({
+            where: {
+                id,
+            },
+            include: {
+                carInformation: true,
+                contactDetails: true,
+                media: true,
+                seller: {
+                    select: {
+                        username: true,
+                    },
+                },
             },
         });
     };

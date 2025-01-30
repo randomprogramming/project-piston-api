@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import type { Account } from "@prisma/client";
 import type AccountRepository from "../repository/AccountRepository";
+import type CloudinaryService from "../service/CloudinaryService";
 import { parseLoginBody, parseRegisterBody } from "../dto/account";
 import logger from "../logger";
 import { compareHashedPass, hashPass } from "../util/auth";
@@ -14,7 +15,10 @@ import ResponseErrorMessageBuilder from "./response/ResponseErrorMessageBuilder"
 import HttpStatus from "../HttpStatus";
 
 export default class AuthRouter extends BaseRouter {
-    constructor(private accountRepo: AccountRepository) {
+    constructor(
+        private accountRepo: AccountRepository,
+        private cloudinaryService: CloudinaryService
+    ) {
         super(API_VERSION.V1, "/auth");
 
         this.router.get("/google", googleAuth({})); // Step 1 of Google OAuth
@@ -29,6 +33,7 @@ export default class AuthRouter extends BaseRouter {
         this.router.post("/register", this.register);
         this.router.post("/login", this.login);
         this.router.get("/me", auth(), this.getMe);
+        this.router.get("/cloudinary", auth(), this.authenticateCloudinary);
     }
 
     public handleGoogleCallback = async (req: Request, res: Response) => {
@@ -123,5 +128,11 @@ export default class AuthRouter extends BaseRouter {
 
     public getMe = (req: Request, res: Response) => {
         res.json(req.user);
+    };
+
+    public authenticateCloudinary = async (_req: Request, res: Response) => {
+        const resp = this.cloudinaryService.authenticateCloudinary();
+
+        res.json(resp);
     };
 }

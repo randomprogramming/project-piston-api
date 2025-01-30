@@ -11,7 +11,7 @@ import { AUCTION_IMAGE_HOST } from "../env";
 import ResponseErrorMessageBuilder from "./response/ResponseErrorMessageBuilder";
 import path from "path";
 import { parseId } from "../dto/common";
-import { AuctionState } from "@prisma/client";
+import { AuctionState, Role } from "@prisma/client";
 
 export default class AuctionRouter extends BaseRouter {
     constructor(
@@ -28,12 +28,14 @@ export default class AuctionRouter extends BaseRouter {
             this.submitAuction
         );
         this.router.get("/seller/me", auth(), this.getMyAuctions);
+        // this.router.get("/id/:id", this.);
+        this.router.get("/id/:id/preview", auth(), this.getPreview);
         // this.router.get("/seller/id/:id", auth(), this.getMyAuctions);
         // this.router.patch(
         //     "/patch/:id",
         //     auth(),
         //     hasAdminRole(),
-        //     this.adminPatchAuction
+        //     this.
         // );
         this.router.get(
             "/admin/pending",
@@ -51,7 +53,7 @@ export default class AuctionRouter extends BaseRouter {
         //     "/admin/go-live/:id",
         //     auth(),
         //     hasAdminRole(),
-        //     this.acceptSubbmittedAuction
+        //     this.
         // );
     }
 
@@ -90,6 +92,22 @@ export default class AuctionRouter extends BaseRouter {
         );
 
         res.json(auctions);
+    };
+
+    public getPreview = async (req: Request, res: Response) => {
+        const id = parseId(req.params);
+        const auction = await this.auctionRepo.findByIdIncludeAll(id);
+
+        // The owner of the auction and any admin may see the preview
+        const maySeePreview =
+            auction?.sellerId !== req.user!.id || req.user!.role === Role.ADMIN;
+        if (!auction || !maySeePreview) {
+            return ResponseErrorMessageBuilder.auction()
+                .addDetail(id, "not_found")
+                .send(res, HttpStatus.NotFound);
+        }
+
+        res.json(auction);
     };
 
     /**

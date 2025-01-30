@@ -71,3 +71,8 @@ export const GOOGLE_SECRET = parseEnvString("GOOGLE_SECRET", true);
 export const GOOGLE_CALLBACK_URL = parseEnvURL("GOOGLE_CALLBACK_URL", true);
 export const GOOGLE_REDIRECT_URL = parseEnvURL("GOOGLE_REDIRECT_URL", true);
 export const AUCTION_IMAGE_HOST = parseEnvURL("AUCTION_IMAGE_HOST", true);
+export const CLOUDINARY_API_KEY = parseEnvString("CLOUDINARY_API_KEY", true);
+export const CLOUDINARY_API_SECRET = parseEnvString(
+    "CLOUDINARY_API_SECRET",
+    true
+);

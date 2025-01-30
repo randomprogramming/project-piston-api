@@ -15,6 +15,7 @@ import AuctionRouter from "./router/AuctionRouter";
 import AuctionRepository from "./repository/AuctionRepository";
 import LocalImageStorageService from "./imagestorage/LocalImageStorage";
 import MediaRepository from "./repository/MediaRepository";
+import CloudinaryService from "./service/CloudinaryService";
 
 export default class Server {
     private app: Express;
@@ -25,6 +26,7 @@ export default class Server {
     private mediaRepo: MediaRepository;
 
     private imageStorage: ImageStorage;
+    private cloudinaryService: CloudinaryService;
 
     constructor() {
         this.app = express();
@@ -35,6 +37,7 @@ export default class Server {
         this.mediaRepo = new MediaRepository(this.prismaClient);
 
         this.imageStorage = new LocalImageStorageService("/images/auctions");
+        this.cloudinaryService = new CloudinaryService();
     }
 
     private setupMiddleware() {
@@ -63,7 +66,7 @@ export default class Server {
 
         const ALL_ROUTERS: BaseRouter[] = [
             new PingRouter(),
-            new AuthRouter(this.accountRepo),
+            new AuthRouter(this.accountRepo, this.cloudinaryService),
             new AuctionRouter(
                 this.auctionRepo,
                 this.mediaRepo,
