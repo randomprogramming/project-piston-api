@@ -53,7 +53,17 @@ export default class AuctionRepository {
                 include: {
                     carInformation: true,
                     contactDetails: true,
-                    media: true,
+                    media: {
+                        orderBy: [
+                            {
+                                // TODO: Verify that this actually works, since group is an enum
+                                group: "asc",
+                            },
+                            {
+                                order: "asc",
+                            },
+                        ],
+                    },
                     seller: {
                         select: {
                             username: true,
@@ -75,6 +85,29 @@ export default class AuctionRepository {
         });
     };
 
+    public findByIdAndSellerId = async (id: string, sellerId: string) => {
+        return this.prisma.auction.findFirst({
+            where: {
+                id,
+                sellerId,
+            },
+        });
+    };
+
+    public findByIdAndSellerIdAndState = async (
+        id: string,
+        sellerId: string,
+        state: AuctionState
+    ) => {
+        return this.prisma.auction.findFirst({
+            where: {
+                id,
+                sellerId,
+                state,
+            },
+        });
+    };
+
     public findByIdIncludeAll = async (id: string) => {
         return this.prisma.auction.findFirst({
             where: {
@@ -83,7 +116,17 @@ export default class AuctionRepository {
             include: {
                 carInformation: true,
                 contactDetails: true,
-                media: true,
+                media: {
+                    orderBy: [
+                        {
+                            // TODO: Verify that this actually works, since group is an enum
+                            group: "asc",
+                        },
+                        {
+                            order: "asc",
+                        },
+                    ],
+                },
                 seller: {
                     select: {
                         username: true,
@@ -92,21 +135,6 @@ export default class AuctionRepository {
             },
         });
     };
-
-    // public updateById = async (id: string, data: AuctionPatchData) => {
-    //     return this.prisma.auction.update({
-    //         data: {
-    //             carInformation: {
-    //                 update: {
-    //                     ...data.carInformation,
-    //                 },
-    //             },
-    //         },
-    //         where: {
-    //             id,
-    //         },
-    //     });
-    // };
 
     public updateStateById = async (id: string, newState: AuctionState) => {
         return this.prisma.auction.update({
@@ -127,7 +155,17 @@ export default class AuctionRepository {
             include: {
                 carInformation: true,
                 contactDetails: true,
-                media: true,
+                media: {
+                    orderBy: [
+                        {
+                            // TODO: Verify that this actually works, since group is an enum
+                            group: "asc",
+                        },
+                        {
+                            order: "asc",
+                        },
+                    ],
+                },
             },
         });
     };

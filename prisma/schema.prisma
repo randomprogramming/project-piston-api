@@ -148,19 +148,28 @@ model Auction {
   updatedAt DateTime @updatedAt
 }
 
+enum ImageGroup {
+  EXTERIOR
+  INTERIOR
+  MECHANICAL
+  PAPERWORK
+  MISC
+}
+
 model Media {
   id String @id @default(uuid())
 
-  /// Relative path to the media: "/images/auctions/auction-id-1/image1.jpg"
-  path String
-  /// Full URL to the media: "http://localhost:8080/images/auctions/auction-id-1/image1.jpg"
-  /// I chose to do it this way because I am not sure where I will be hosting the images, and it may change in the future
-  /// Also it's easier for the frontend.
-  url  String @unique
+  url   String      @unique
+  group ImageGroup?
+  /// Starts from 0
+  order Int?
 
   auctionId String?
   auction   Auction? @relation(fields: [auctionId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  // Unique order for each group in an auction
+  @@unique([auctionId, group, order])
 }

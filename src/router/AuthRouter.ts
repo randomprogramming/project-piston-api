@@ -33,7 +33,7 @@ export default class AuthRouter extends BaseRouter {
         this.router.post("/register", this.register);
         this.router.post("/login", this.login);
         this.router.get("/me", auth(), this.getMe);
-        this.router.get("/cloudinary", auth(), this.authenticateCloudinary);
+        this.router.post("/cloudinary", auth(), this.authenticateCloudinary);
     }
 
     public handleGoogleCallback = async (req: Request, res: Response) => {
@@ -131,6 +131,8 @@ export default class AuthRouter extends BaseRouter {
     };
 
     public authenticateCloudinary = async (_req: Request, res: Response) => {
+        // TODO: move this entire endpoint to the auctionRouter so that we can verify that uploading for that auction is allowed
+        // (is in state PENDING_CHANGES and has less than 200 images)
         const resp = this.cloudinaryService.authenticateCloudinary();
 
         res.json(resp);

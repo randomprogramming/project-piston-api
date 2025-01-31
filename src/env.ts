@@ -76,3 +76,7 @@ export const CLOUDINARY_API_SECRET = parseEnvString(
     "CLOUDINARY_API_SECRET",
     true
 );
+export const CLOUDINARY_CLOUD_NAME = parseEnvString(
+    "CLOUDINARY_CLOUD_NAME",
+    true
+);

@@ -11,7 +11,8 @@ import { AUCTION_IMAGE_HOST } from "../env";
 import ResponseErrorMessageBuilder from "./response/ResponseErrorMessageBuilder";
 import path from "path";
 import { parseId } from "../dto/common";
-import { AuctionState, Role } from "@prisma/client";
+import { AuctionState, ImageGroup, Role } from "@prisma/client";
+import { parseMediaUploadDto } from "../dto/media";
 
 export default class AuctionRouter extends BaseRouter {
     constructor(
@@ -27,16 +28,9 @@ export default class AuctionRouter extends BaseRouter {
             imageUpload.single("image"),
             this.submitAuction
         );
+        this.router.post("/id/:id/media", auth(), this.addAuctionMedia);
         this.router.get("/seller/me", auth(), this.getMyAuctions);
-        // this.router.get("/id/:id", this.);
         this.router.get("/id/:id/preview", auth(), this.getPreview);
-        // this.router.get("/seller/id/:id", auth(), this.getMyAuctions);
-        // this.router.patch(
-        //     "/patch/:id",
-        //     auth(),
-        //     hasAdminRole(),
-        //     this.
-        // );
         this.router.get(
             "/admin/pending",
             auth(),
@@ -49,12 +43,6 @@ export default class AuctionRouter extends BaseRouter {
             hasAdminRole(),
             this.acceptSubbmittedAuction
         );
-        // this.router.patch(
-        //     "/admin/go-live/:id",
-        //     auth(),
-        //     hasAdminRole(),
-        //     this.
-        // );
     }
 
     public submitAuction = async (req: Request, res: Response) => {
@@ -81,7 +69,10 @@ export default class AuctionRouter extends BaseRouter {
             AUCTION_IMAGE_HOST.href.replace(/\/$/, "") +
             "/" +
             imagePath.replace(/^\//, "");
-        await this.mediaRepo.createForAuction(id, imagePath, imageUrl);
+        await this.mediaRepo.createForAuction(id, ImageGroup.EXTERIOR, {
+            url: imageUrl,
+            order: 0,
+        });
 
         res.status(HttpStatus.Created).send(id);
     };
@@ -199,6 +190,27 @@ export default class AuctionRouter extends BaseRouter {
             id,
             AuctionState.PENDING_CHANGES
         );
+        res.send();
+    };
+
+    public addAuctionMedia = async (req: Request, res: Response) => {
+        const id = parseId(req.params);
+        const data = parseMediaUploadDto(req.body);
+
+        // May upload photos only when auction is in PENDING_CHANGES state
+        const auction = await this.auctionRepo.findByIdAndSellerIdAndState(
+            id,
+            req.user!.id,
+            AuctionState.PENDING_CHANGES
+        );
+        if (!auction) {
+            return ResponseErrorMessageBuilder.auction()
+                .addDetail("not_found")
+                .send(res, HttpStatus.NotFound);
+        }
+        // TODO: We need to do validation to make sure that the order is correct
+        // Newly added pictures may only be added to the end, and then the user may re-order them
+        await this.mediaRepo.createManyForAuction(id, data.group, data.media);
         res.send();
     };
 }

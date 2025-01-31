@@ -22,3 +22,4 @@ export const nullableString = (max?: number) =>
 
 export const modelYear = () => z.coerce.number().min(1885).max(3000);
 export const mileage = () => z.coerce.number().min(0);
+export const url = () => z.string().url();

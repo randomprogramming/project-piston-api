@@ -1,16 +1,18 @@
 import { v2 as cloudinary } from "cloudinary";
 import logger from "../logger";
-import { CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } from "../env";
+import {
+    CLOUDINARY_API_KEY,
+    CLOUDINARY_API_SECRET,
+    CLOUDINARY_CLOUD_NAME,
+} from "../env";
 
 export default class CloudinaryService {
-    // TODO: Proper app name?
-    private static readonly CLOUD_NAME = "project-piston";
     private static readonly UPLOAD_FORMAT = "webp";
 
     constructor() {
         logger.info("Configuring cloudinary service");
         cloudinary.config({
-            cloud_name: CloudinaryService.CLOUD_NAME,
+            cloud_name: CLOUDINARY_CLOUD_NAME,
             api_key: CLOUDINARY_API_KEY,
             api_secret: CLOUDINARY_API_SECRET,
         });
@@ -32,7 +34,7 @@ export default class CloudinaryService {
         return {
             signature,
             timestamp,
-            cloudname: CloudinaryService.CLOUD_NAME,
+            cloudname: CLOUDINARY_CLOUD_NAME,
             api_key: CLOUDINARY_API_KEY,
         };
     };
