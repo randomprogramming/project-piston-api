@@ -1,7 +1,6 @@
 import type { Request, Response } from "express";
 import type { Account } from "@prisma/client";
 import type AccountRepository from "../repository/AccountRepository";
-import type CloudinaryService from "../service/CloudinaryService";
 import { parseLoginBody, parseRegisterBody } from "../dto/account";
 import logger from "../logger";
 import { compareHashedPass, hashPass } from "../util/auth";
@@ -15,10 +14,7 @@ import ResponseErrorMessageBuilder from "./response/ResponseErrorMessageBuilder"
 import HttpStatus from "../HttpStatus";
 
 export default class AuthRouter extends BaseRouter {
-    constructor(
-        private accountRepo: AccountRepository,
-        private cloudinaryService: CloudinaryService
-    ) {
+    constructor(private accountRepo: AccountRepository) {
         super(API_VERSION.V1, "/auth");
 
         this.router.get("/google", googleAuth({})); // Step 1 of Google OAuth
@@ -33,7 +29,6 @@ export default class AuthRouter extends BaseRouter {
         this.router.post("/register", this.register);
         this.router.post("/login", this.login);
         this.router.get("/me", auth(), this.getMe);
-        this.router.post("/cloudinary", auth(), this.authenticateCloudinary);
     }
 
     public handleGoogleCallback = async (req: Request, res: Response) => {
@@ -128,13 +123,5 @@ export default class AuthRouter extends BaseRouter {
 
     public getMe = (req: Request, res: Response) => {
         res.json(req.user);
-    };
-
-    public authenticateCloudinary = async (_req: Request, res: Response) => {
-        // TODO: move this entire endpoint to the auctionRouter so that we can verify that uploading for that auction is allowed
-        // (is in state PENDING_CHANGES and has less than 200 images)
-        const resp = this.cloudinaryService.authenticateCloudinary();
-
-        res.json(resp);
     };
 }

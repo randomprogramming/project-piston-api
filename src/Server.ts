@@ -66,11 +66,12 @@ export default class Server {
 
         const ALL_ROUTERS: BaseRouter[] = [
             new PingRouter(),
-            new AuthRouter(this.accountRepo, this.cloudinaryService),
+            new AuthRouter(this.accountRepo),
             new AuctionRouter(
                 this.auctionRepo,
                 this.mediaRepo,
-                this.imageStorage
+                this.imageStorage,
+                this.cloudinaryService
             ),
         ];
 

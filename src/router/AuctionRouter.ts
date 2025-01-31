@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import type AuctionRepository from "../repository/AuctionRepository";
 import type MediaRepository from "../repository/MediaRepository";
 import type { ImageStorage } from "../imagestorage/ImageStorage";
+import type CloudinaryService from "../service/CloudinaryService";
 import BaseRouter, { API_VERSION } from "./BaseRouter";
 import { auth, hasAdminRole } from "../util/auth/middleware";
 import { parseAuctionDto } from "../dto/auction";
@@ -18,7 +19,8 @@ export default class AuctionRouter extends BaseRouter {
     constructor(
         private auctionRepo: AuctionRepository,
         private mediaRepo: MediaRepository,
-        private imageStorage: ImageStorage
+        private imageStorage: ImageStorage,
+        private cloudinaryService: CloudinaryService
     ) {
         super(API_VERSION.V1, "/auction");
 
@@ -27,6 +29,11 @@ export default class AuctionRouter extends BaseRouter {
             auth(),
             imageUpload.single("image"),
             this.submitAuction
+        );
+        this.router.post(
+            "/authenticate-cloudinary",
+            auth(),
+            this.authenticateCloudinary
         );
         this.router.post("/id/:id/media", auth(), this.addAuctionMedia);
         this.router.get("/seller/me", auth(), this.getMyAuctions);
@@ -212,5 +219,12 @@ export default class AuctionRouter extends BaseRouter {
         // Newly added pictures may only be added to the end, and then the user may re-order them
         await this.mediaRepo.createManyForAuction(id, data.group, data.media);
         res.send();
+    };
+
+    public authenticateCloudinary = async (_req: Request, res: Response) => {
+        // TODO: Check auction is in state PENDING_CHANGES and has less than 200 images
+        const resp = this.cloudinaryService.authenticateCloudinary();
+
+        res.json(resp);
     };
 }
