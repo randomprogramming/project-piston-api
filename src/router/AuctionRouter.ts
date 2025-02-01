@@ -45,20 +45,17 @@ export default class AuctionRouter extends BaseRouter {
         );
         this.router.get(
             "/admin/pending",
-            auth(),
-            hasAdminRole(),
+            ...hasAdminRole(),
             this.getPendingAuctions
         );
         this.router.patch(
             "/admin/id/:id/accept",
-            auth(),
-            hasAdminRole(),
+            ...hasAdminRole(),
             this.acceptSubbmittedAuction
         );
         this.router.patch(
             "/admin/id/:id/go-live",
-            auth(),
-            hasAdminRole(),
+            ...hasAdminRole(),
             this.auctionGoLive
         );
     }

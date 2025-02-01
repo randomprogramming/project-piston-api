@@ -33,14 +33,21 @@ export function auth() {
 // TODO: There is a problem where after changing the users role in the database, the change won't be actually reflected
 // to the user, because the role is saved in their JWT token
 // Maybe we need to look into keeping a list of "blacklisted" tokens in a cache if we will be changing roles often?
+/**
+ * Middleware which checks if a user holds a specific role, reading it from the JWT.
+ * Also includes the auth() middleware so you don't have to use it in your route
+ */
 export function hasRole(r: Role) {
-    return (req: Request, res: Response, next: NextFunction) => {
-        if (req.user?.role !== r) {
-            res.status(HttpStatus.Unauthorized).send();
-            return;
-        }
-        next();
-    };
+    return [
+        auth(),
+        (req: Request, res: Response, next: NextFunction) => {
+            if (req.user?.role !== r) {
+                res.status(HttpStatus.Unauthorized).send();
+                return;
+            }
+            next();
+        },
+    ];
 }
 
 export function hasAdminRole() {
