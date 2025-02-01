@@ -25,19 +25,24 @@ export default class AuctionRouter extends BaseRouter {
         super(API_VERSION.V1, "/auction");
 
         this.router.post(
-            "/submit",
+            "/",
             auth(),
             imageUpload.single("image"),
             this.submitAuction
         );
         this.router.post(
-            "/authenticate-cloudinary",
+            "/media/authenticate",
             auth(),
             this.authenticateCloudinary
         );
+        this.router.get("/seller/id/:id", auth(), this.getAuctionsBySellerId);
         this.router.post("/id/:id/media", auth(), this.addAuctionMedia);
-        this.router.get("/seller/me", auth(), this.getMyAuctions);
         this.router.get("/id/:id/preview", auth(), this.getPreview);
+        this.router.patch(
+            "/id/:id/request-review",
+            auth(),
+            this.submitAuctionForReview
+        );
         this.router.get(
             "/admin/pending",
             auth(),
@@ -45,10 +50,16 @@ export default class AuctionRouter extends BaseRouter {
             this.getPendingAuctions
         );
         this.router.patch(
-            "/admin/accept/:id",
+            "/admin/id/:id/accept",
             auth(),
             hasAdminRole(),
             this.acceptSubbmittedAuction
+        );
+        this.router.patch(
+            "/admin/id/:id/go-live",
+            auth(),
+            hasAdminRole(),
+            this.auctionGoLive
         );
     }
 
@@ -84,7 +95,7 @@ export default class AuctionRouter extends BaseRouter {
         res.status(HttpStatus.Created).send(id);
     };
 
-    public getMyAuctions = async (req: Request, res: Response) => {
+    public getAuctionsBySellerId = async (req: Request, res: Response) => {
         const auctions = await this.auctionRepo.findBySellerIdIncludeAll(
             req.user!.id
         );
@@ -109,37 +120,6 @@ export default class AuctionRouter extends BaseRouter {
     };
 
     /**
-     * Patching auction data endpoint for the user which created the auction
-     */
-    // public patchAuction = async (req: Request, res: Response) => {
-    //     const id = parseId(req.params);
-    //     // TODO: Don't use full patch data, instead just "cast" the specific data which user is allowed to edit
-    //     // And then pass that into auctionRepo.updateById
-    //     const patchData = parseAuctionPatchData(req.body);
-
-    //     const auction = await this.auctionRepo.findById(id);
-
-    //     if (!auction || req.user!.id !== auction.sellerId) {
-    //         return ResponseErrorMessageBuilder.auction()
-    //             .addDetail("not_found")
-    //             .send(res, HttpStatus.NotFound);
-    //     }
-
-    //     // User is allowed to update auction only in specific auction states
-    //     if (
-    //         auction.state !== AuctionState.PENDING_CHANGES &&
-    //         auction.state !== AuctionState.SUBMITTED
-    //     ) {
-    //         return ResponseErrorMessageBuilder.auction()
-    //             .addDetail("not_patchable")
-    //             .send(res);
-    //     }
-    //     // TODO: Finishme based on comment above
-    //     // await this.auctionRepo.updateById(id, patchData);
-    //     res.send();
-    // };
-
-    /**
      * Pending auctions are auctions with state "SUBMITTED" or "UNDER_REVIEW", both of which can be
      * accepted and rejected by an admin.
      */
@@ -150,27 +130,23 @@ export default class AuctionRouter extends BaseRouter {
         res.json(auctions);
     };
 
-    /**
-     * Patching auction data endpoint specific for admins only
-     */
-    // public adminPatchAuction = async (req: Request, res: Response) => {
-    //     const id = parseId(req.params);
-    //     const patchData = parseAuctionPatchData(req.body);
+    public submitAuctionForReview = async (req: Request, res: Response) => {
+        const id = parseId(req.params);
 
-    //     const auction = await this.auctionRepo.findById(id);
+        const auction = await this.auctionRepo.findByIdAndSellerIdAndState(
+            id,
+            req.user!.id,
+            AuctionState.PENDING_CHANGES
+        );
+        if (!auction) {
+            return ResponseErrorMessageBuilder.auction()
+                .addDetail("not_found")
+                .send(res, HttpStatus.NotFound);
+        }
 
-    //     if (!auction) {
-    //         return ResponseErrorMessageBuilder.auction()
-    //             .addDetail("not_found")
-    //             .send(res, HttpStatus.NotFound);
-    //     }
-
-    //     logger.info(
-    //         `Patching auction '${id}' with data '${JSON.stringify(patchData)}'`
-    //     );
-    //     await this.auctionRepo.updateById(id, patchData);
-    //     res.send();
-    // };
+        await this.auctionRepo.updateStateById(id, AuctionState.UNDER_REVIEW);
+        res.send();
+    };
 
     public acceptSubbmittedAuction = async (req: Request, res: Response) => {
         const id = parseId(req.params);
@@ -180,6 +156,7 @@ export default class AuctionRouter extends BaseRouter {
         if (!auction) {
             return ResponseErrorMessageBuilder.auction()
                 .addDetail("not_found")
+                .log("acceptSubbmittedAuction", "Requested auction not found")
                 .send(res, HttpStatus.NotFound);
         }
 
@@ -226,5 +203,29 @@ export default class AuctionRouter extends BaseRouter {
         const resp = this.cloudinaryService.authenticateCloudinary();
 
         res.json(resp);
+    };
+
+    public auctionGoLive = async (req: Request, res: Response) => {
+        const id = parseId(req.params);
+        const auction = await this.auctionRepo.findById(id);
+
+        if (!auction) {
+            return ResponseErrorMessageBuilder.auction()
+                .addDetail("not_found")
+                .send(res, HttpStatus.NotFound);
+        }
+
+        if (auction.state !== AuctionState.UNDER_REVIEW) {
+            return ResponseErrorMessageBuilder.auction()
+                .addDetail("invalid_state")
+                .log(
+                    "auctionGoLive",
+                    `Expected state UNDER_REVIEW, found '${auction.state}'`
+                )
+                .send(res);
+        }
+
+        await this.auctionRepo.updateStateById(id, AuctionState.LIVE);
+        res.send();
     };
 }
