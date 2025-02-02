@@ -23,7 +23,8 @@ enum Role {
 }
 
 model Account {
-  id       String       @id @default(uuid())
+  id String @id @default(uuid())
+
   /// An account created through Google or other providers won't have a username immediately
   /// We need to create the account and then prompt the user for a username
   username String?      @unique
@@ -34,6 +35,7 @@ model Account {
   role     Role         @default(USER)
 
   auctions Auction[]
+  bids     Bid[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -100,9 +102,9 @@ enum ContactType {
 model ContactDetails {
   id String @id @default(uuid())
 
-  /// If type is private, name is full name of the private person
+  /// If type is private, name is full name of the private person. `dealerName` is then not defined.
   name       String?
-  /// If type is dealer, name is name of the delaership/company
+  /// If type is dealer, dealerName is name of the delaership/company. `name` is then not defined.
   dealerName String?
   type       ContactType
   phone      String
@@ -143,6 +145,7 @@ model Auction {
   contactDetails   ContactDetails        @relation(fields: [contactDetailsId], references: [id])
   contactDetailsId String                @unique
   media            Media[]
+  bids             Bid[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -172,4 +175,19 @@ model Media {
 
   // Unique order for each group in an auction
   @@unique([auctionId, group, order])
+}
+
+model Bid {
+  id String @id @default(uuid())
+
+  /// Euros stored as cents!
+  amount Int
+
+  bidder    Account @relation(fields: [bidderId], references: [id])
+  bidderId  String
+  auction   Auction @relation(fields: [auctionId], references: [id])
+  auctionId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

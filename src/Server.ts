@@ -16,9 +16,12 @@ import AuctionRepository from "./repository/AuctionRepository";
 import LocalImageStorageService from "./imagestorage/LocalImageStorage";
 import MediaRepository from "./repository/MediaRepository";
 import CloudinaryService from "./service/CloudinaryService";
+import http from "http";
+import AuctionWebSocketService from "./service/ws/AuctionWebSocketService";
 
 export default class Server {
     private app: Express;
+    private httpServer: http.Server;
     private prismaClient: PrismaClient;
 
     private accountRepo: AccountRepository;
@@ -27,9 +30,11 @@ export default class Server {
 
     private imageStorage: ImageStorage;
     private cloudinaryService: CloudinaryService;
+    private auctionWebSocketService: AuctionWebSocketService;
 
     constructor() {
         this.app = express();
+        this.httpServer = http.createServer(this.app);
         this.prismaClient = new PrismaClient();
 
         this.accountRepo = new AccountRepository(this.prismaClient);
@@ -38,6 +43,9 @@ export default class Server {
 
         this.imageStorage = new LocalImageStorageService("/images/auctions");
         this.cloudinaryService = new CloudinaryService();
+        this.auctionWebSocketService = new AuctionWebSocketService(
+            this.httpServer
+        );
     }
 
     private setupMiddleware() {
@@ -94,7 +102,7 @@ export default class Server {
     }
 
     private listen() {
-        this.app.listen(PORT);
+        this.httpServer.listen(PORT);
         logger.info(`Server started, listening on port ${PORT}`);
     }
 
