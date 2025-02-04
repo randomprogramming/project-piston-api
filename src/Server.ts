@@ -18,6 +18,9 @@ import MediaRepository from "./repository/MediaRepository";
 import CloudinaryService from "./service/CloudinaryService";
 import http from "http";
 import AuctionWebSocketService from "./service/ws/AuctionWebSocketService";
+import BidRepository from "./repository/BidRepository";
+import BidService from "./service/BidService";
+import BidRouter from "./router/BidRouter";
 
 export default class Server {
     private app: Express;
@@ -27,25 +30,34 @@ export default class Server {
     private accountRepo: AccountRepository;
     private auctionRepo: AuctionRepository;
     private mediaRepo: MediaRepository;
+    private bidRepo: BidRepository;
 
     private imageStorage: ImageStorage;
     private cloudinaryService: CloudinaryService;
     private auctionWebSocketService: AuctionWebSocketService;
+    private bidService: BidService;
 
     constructor() {
         this.app = express();
         this.httpServer = http.createServer(this.app);
-        this.prismaClient = new PrismaClient();
+        this.prismaClient = new PrismaClient({
+            transactionOptions: {
+                timeout: 20000,
+                maxWait: 20000,
+            },
+        });
 
         this.accountRepo = new AccountRepository(this.prismaClient);
         this.auctionRepo = new AuctionRepository(this.prismaClient);
         this.mediaRepo = new MediaRepository(this.prismaClient);
+        this.bidRepo = new BidRepository(this.prismaClient);
 
         this.imageStorage = new LocalImageStorageService("/images/auctions");
         this.cloudinaryService = new CloudinaryService();
         this.auctionWebSocketService = new AuctionWebSocketService(
             this.httpServer
         );
+        this.bidService = new BidService(this.bidRepo, this.auctionRepo);
     }
 
     private setupMiddleware() {
@@ -81,6 +93,7 @@ export default class Server {
                 this.imageStorage,
                 this.cloudinaryService
             ),
+            new BidRouter(this.bidService),
         ];
 
         for (const router of ALL_ROUTERS) {

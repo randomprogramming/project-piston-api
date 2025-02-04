@@ -1,4 +1,9 @@
-import { AuctionState, type PrismaClient } from "@prisma/client";
+import {
+    AuctionState,
+    Prisma,
+    type PrismaClient,
+    type Auction,
+} from "@prisma/client";
 import type {
     AuctionCarInformationDto,
     AuctionContactDetailsDto,
@@ -83,6 +88,20 @@ export default class AuctionRepository {
                 id,
             },
         });
+    };
+
+    public findByIdLockRow = async (
+        tx: Prisma.TransactionClient,
+        id: string
+    ) => {
+        return (
+            await tx.$queryRaw<Auction[]>`
+                    SELECT *
+                    FROM "Auction"
+                    WHERE id = ${id}
+                    FOR UPDATE
+                `
+        )[0];
     };
 
     public findByIdAndSellerId = async (id: string, sellerId: string) => {

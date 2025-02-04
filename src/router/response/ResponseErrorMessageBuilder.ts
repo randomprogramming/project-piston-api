@@ -21,6 +21,9 @@ export default class ResponseErrorMessageBuilder {
     static auction() {
         return new ResponseErrorMessageBuilder("auction");
     }
+    static bid() {
+        return new ResponseErrorMessageBuilder("bid");
+    }
 
     private getMessage(): string {
         return [
