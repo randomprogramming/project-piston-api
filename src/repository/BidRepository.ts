@@ -24,7 +24,10 @@ export default class BidRepository {
         });
     };
 
-    public findHighestBidForAuction = async (
+    /**
+     * Current Bid is the bid with the highest amount on an auction
+     */
+    public findCurrentBidForAuction = async (
         auctionId: string
     ): Promise<Bid | null> => {
         return this.prisma.bid.findFirst({

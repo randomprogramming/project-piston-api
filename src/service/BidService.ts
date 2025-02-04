@@ -37,10 +37,10 @@ export default class BidService {
                 if (auction.state !== AuctionState.LIVE) {
                     return Err("auction_not_live");
                 }
-                const latestBid = await this.bidRepo.findHighestBidForAuction(
+                const currentBid = await this.bidRepo.findCurrentBidForAuction(
                     auctionId
                 );
-                if (latestBid && bidDto.amount <= latestBid.amount) {
+                if (currentBid && bidDto.amount <= currentBid.amount) {
                     return Err("amount_too_small");
                 }
                 const newBid = await this.bidRepo.createForAuction(
