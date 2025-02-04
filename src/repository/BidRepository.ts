@@ -1,4 +1,4 @@
-import type { Bid, Prisma, PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 import type { BidDto } from "../dto/bid";
 
 export default class BidRepository {
@@ -13,9 +13,15 @@ export default class BidRepository {
     public createForAuction = async (
         auctionId: string,
         bidderId: string,
-        dto: BidDto
+        dto: BidDto,
+        tx?: Prisma.TransactionClient
     ) => {
-        return this.prisma.bid.create({
+        let client: PrismaClient | Prisma.TransactionClient = this.prisma;
+        if (tx) {
+            client = tx;
+        }
+
+        return client.bid.create({
             data: {
                 amount: dto.amount,
                 auctionId,
@@ -24,18 +30,33 @@ export default class BidRepository {
         });
     };
 
-    /**
-     * Current Bid is the bid with the highest amount on an auction
-     */
-    public findCurrentBidForAuction = async (
-        auctionId: string
-    ): Promise<Bid | null> => {
+    public findCurrentBidForAuction = async (auctionId: string) => {
         return this.prisma.bid.findFirst({
             where: {
                 auctionId,
             },
             orderBy: {
                 amount: "desc",
+            },
+        });
+    };
+
+    public findCurrentBidForAuctionIncludeBidder = async (
+        auctionId: string
+    ) => {
+        return this.prisma.bid.findFirst({
+            where: {
+                auctionId,
+            },
+            orderBy: {
+                amount: "desc",
+            },
+            include: {
+                bidder: {
+                    select: {
+                        username: true,
+                    },
+                },
             },
         });
     };

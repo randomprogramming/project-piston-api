@@ -20,12 +20,8 @@ export default class BidService {
             `User '${bidderId}' bidding '${bidDto.amount}' cents on auction '${auctionId}'`
         );
 
-        // TODO: What if auction row is locked, but another endpoint, like actually fetching the auction for a preview,
-        // tries to access it. Is it also locked? Shouldnt be, right? since it's like only inside this transaction? idk check it out
-        // either way.
         const bidResult = await this.bidRepo.asTransaction<Result<Bid, string>>(
             async (tx) => {
-                // While the auction row is locked, no other bids can be inserted for that auction
                 const auction = await this.auctionRepo.findByIdLockRow(
                     tx,
                     auctionId
@@ -37,7 +33,7 @@ export default class BidService {
                 if (auction.state !== AuctionState.LIVE) {
                     return Err("auction_not_live");
                 }
-                const currentBid = await this.bidRepo.findCurrentBidForAuction(
+                const currentBid = await this.getCurrentBidForAuction(
                     auctionId
                 );
                 if (currentBid && bidDto.amount <= currentBid.amount) {
@@ -46,7 +42,8 @@ export default class BidService {
                 const newBid = await this.bidRepo.createForAuction(
                     auctionId,
                     bidderId,
-                    bidDto
+                    bidDto,
+                    tx
                 );
                 if (!newBid) {
                     return Err("bid_failed");
@@ -57,5 +54,16 @@ export default class BidService {
         );
 
         return bidResult;
+    };
+
+    /**
+     * Current Bid is the bid with the highest amount on an auction
+     */
+    public getCurrentBidForAuction = async (auctionId: string) => {
+        return this.bidRepo.findCurrentBidForAuction(auctionId);
+    };
+
+    public getCurrentBidAndBidderForAuction = async (auctionId: string) => {
+        return this.bidRepo.findCurrentBidForAuctionIncludeBidder(auctionId);
     };
 }

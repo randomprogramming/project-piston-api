@@ -1,6 +1,8 @@
 import { type Server as HttpServer } from "http";
 import type { Socket } from "socket.io";
+import type { MappedBid } from "../../router/response/bidMapping";
 import WebSocketService from "./WebSocketService";
+import logger from "../../logger";
 
 export default class AuctionWebSocketService extends WebSocketService {
     public static readonly NAMESPACE = "/auction";
@@ -10,23 +12,18 @@ export default class AuctionWebSocketService extends WebSocketService {
     }
 
     protected onConnection(socket: Socket) {
-        console.log("User connected", socket.id);
-
         socket.on("subscribe", (auctionId: string) => {
             socket.join(auctionId);
-            console.log(`User ${socket.id} joined auction ${auctionId}`);
+            logger.info(`Socket '${socket.id}' joined auction '${auctionId}'`);
         });
 
         socket.on("unsubscribe", (auctionId: string) => {
             socket.leave(auctionId);
-            console.log(`User ${socket.id} left auction ${auctionId}`);
         });
     }
 
-    /**
-     * Emit an update to all users in a specific auction room.
-     */
-    // public emitAuctionUpdate(auctionId: string, data: any) {
-    //     this.socketNamespace.to(auctionId).emit("auctionUpdate", data);
-    // }
+    public emitNewCurrentBid(auctionId: string, data: MappedBid) {
+        // TODO: Put update names in some sort of separate const file
+        this.socketNamespace.to(auctionId).emit("current_bid_update", data);
+    }
 }

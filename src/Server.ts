@@ -93,7 +93,7 @@ export default class Server {
                 this.imageStorage,
                 this.cloudinaryService
             ),
-            new BidRouter(this.bidService),
+            new BidRouter(this.bidService, this.auctionWebSocketService),
         ];
 
         for (const router of ALL_ROUTERS) {
