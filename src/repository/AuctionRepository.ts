@@ -218,4 +218,34 @@ export default class AuctionRepository {
             },
         });
     };
+
+    public findByPrettyIdIncludeCarInformationAndMediaAndSeller = async (
+        prettyId: string
+    ) => {
+        return this.prisma.auction.findUnique({
+            where: {
+                prettyId,
+            },
+            include: {
+                carInformation: true,
+                media: {
+                    orderBy: [
+                        {
+                            // TODO: Verify that this actually works, since group is an enum
+                            group: "asc",
+                        },
+                        {
+                            order: "asc",
+                        },
+                    ],
+                },
+                seller: {
+                    select: {
+                        username: true,
+                        createdAt: true,
+                    },
+                },
+            },
+        });
+    };
 }

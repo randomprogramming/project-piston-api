@@ -53,4 +53,15 @@ export default class AuctionService {
         );
         return Ok();
     };
+
+    /**
+     * Get the public view of an auction.
+     */
+    public getAuction = async (prettyId: string) => {
+        const auction =
+            await this.auctionRepo.findByPrettyIdIncludeCarInformationAndMediaAndSeller(
+                prettyId
+            );
+        return auction;
+    };
 }

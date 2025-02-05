@@ -12,9 +12,10 @@ import { imageUpload } from "../middleware/file";
 import { AUCTION_IMAGE_HOST } from "../env";
 import ResponseErrorMessageBuilder from "./response/ResponseErrorMessageBuilder";
 import path from "path";
-import { parseId } from "../dto/common";
+import { parseId, parsePrettyId } from "../dto/common";
 import { AuctionState, ImageGroup, Role } from "@prisma/client";
 import { parseMediaUploadDto } from "../dto/media";
+import { mapAuction } from "./response/auctionMapping";
 
 export default class AuctionRouter extends BaseRouter {
     constructor(
@@ -40,6 +41,7 @@ export default class AuctionRouter extends BaseRouter {
         this.router.get("/seller/id/:id", auth(), this.getAuctionsBySellerId);
         this.router.post("/id/:id/media", auth(), this.addAuctionMedia);
         this.router.get("/id/:id/preview", auth(), this.getPreview);
+        this.router.get("/pretty-id/:pretty_id", this.getAuction);
         this.router.patch(
             "/id/:id/request-review",
             auth(),
@@ -116,6 +118,22 @@ export default class AuctionRouter extends BaseRouter {
         }
 
         res.json(auction);
+    };
+
+    public getAuction = async (req: Request, res: Response) => {
+        const prettyId = parsePrettyId(req.params);
+        const auction = await this.auctionService.getAuction(prettyId);
+
+        if (!auction) {
+            console.log("auction not found");
+
+            return ResponseErrorMessageBuilder.auction()
+                .addDetail("not_found")
+                .log("getAuction", `Auction '${prettyId}' not found`)
+                .send(res, HttpStatus.NotFound);
+        }
+
+        res.json(mapAuction(auction));
     };
 
     /**
