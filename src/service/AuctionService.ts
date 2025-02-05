@@ -58,10 +58,30 @@ export default class AuctionService {
      * Get the public view of an auction.
      */
     public getAuction = async (prettyId: string) => {
+        // TODO: use  include: {
+        //     _count: {
+        //         select: {
+        //             bids: true,
+        //         }
+        //     },
+        // },
+        // to also return the bid count and comment count and etc easily.
         const auction =
             await this.auctionRepo.findByPrettyIdIncludeCarInformationAndMediaAndSeller(
                 prettyId
             );
         return auction;
+    };
+
+    public getLiveAuctions = async () => {
+        // TODO: Should also take into consideration auction startDate and auctionEndDate
+        const auctions =
+            await this.auctionRepo.findManyWhereStateLiveIncludeCarInformationAndCurrentBidAndCoverPhoto();
+
+        // TODO: Probably will need pagination, more importantly, filters
+        return {
+            data: auctions,
+            count: auctions.length,
+        };
     };
 }

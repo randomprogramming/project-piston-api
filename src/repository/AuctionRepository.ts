@@ -7,6 +7,7 @@ import {
     type Prisma,
     type PrismaClient,
     type Auction,
+    ImageGroup,
 } from "@prisma/client";
 
 export default class AuctionRepository {
@@ -248,4 +249,31 @@ export default class AuctionRepository {
             },
         });
     };
+
+    public findManyWhereStateLiveIncludeCarInformationAndCurrentBidAndCoverPhoto =
+        async () => {
+            return this.prisma.auction.findMany({
+                where: {
+                    state: AuctionState.LIVE,
+                },
+                include: {
+                    carInformation: true,
+                    bids: {
+                        orderBy: {
+                            amount: "desc",
+                        },
+                        take: 1,
+                    },
+                    media: {
+                        where: {
+                            group: ImageGroup.EXTERIOR,
+                        },
+                        orderBy: {
+                            order: "asc",
+                        },
+                        take: 1,
+                    },
+                },
+            });
+        };
 }

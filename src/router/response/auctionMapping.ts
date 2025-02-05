@@ -1,4 +1,9 @@
-import type { Auction, AuctionCarInformation, Media } from "@prisma/client";
+import type {
+    Auction,
+    AuctionCarInformation,
+    Bid,
+    Media,
+} from "@prisma/client";
 
 interface AuctionWithCarInformationAndMediaAndSeller extends Auction {
     carInformation: AuctionCarInformation;
@@ -14,7 +19,6 @@ export function mapAuction(a: AuctionWithCarInformationAndMediaAndSeller) {
         prettyId: a.prettyId,
         state: a.state,
         carInformation: {
-            id: a.carInformation.id,
             ueCarBrand: a.carInformation.ueCarBrand,
             ueCarModel: a.carInformation.ueCarModel,
             modelYear: a.carInformation.modelYear,
@@ -22,7 +26,6 @@ export function mapAuction(a: AuctionWithCarInformationAndMediaAndSeller) {
             mileage: a.carInformation.mileage,
             carModelName: a.carInformation.carModelName,
             carBrandName: a.carInformation.carBrandName,
-            createdAt: a.carInformation.createdAt,
         },
         seller: {
             username: a.seller.username,
@@ -36,4 +39,36 @@ export function mapAuction(a: AuctionWithCarInformationAndMediaAndSeller) {
             createdAt: m.createdAt,
         })),
     };
+}
+
+interface AuctionWithBids extends Auction {
+    bids: Bid[];
+    media: Media[];
+    carInformation: AuctionCarInformation;
+}
+export function mapLiveAuctionBasic(a: AuctionWithBids) {
+    const currentBid = a.bids[0];
+    const coverPhoto = a.media[0];
+
+    return {
+        id: a.id,
+        prettyId: a.prettyId,
+        carInformation: {
+            ueCarBrand: a.carInformation.ueCarBrand,
+            ueCarModel: a.carInformation.ueCarModel,
+            modelYear: a.carInformation.modelYear,
+            trim: a.carInformation.trim,
+            carModelName: a.carInformation.carModelName,
+            carBrandName: a.carInformation.carBrandName,
+        },
+        currentBid: currentBid
+            ? {
+                  amount: currentBid.amount,
+              }
+            : null,
+        coverPhoto: coverPhoto ? coverPhoto.url : null,
+    };
+}
+export function mapLiveAuctionsBasic(a: AuctionWithBids[]) {
+    return a.map(mapLiveAuctionBasic);
 }

@@ -15,7 +15,7 @@ import path from "path";
 import { parseId, parsePrettyId } from "../dto/common";
 import { AuctionState, ImageGroup, Role } from "@prisma/client";
 import { parseMediaUploadDto } from "../dto/media";
-import { mapAuction } from "./response/auctionMapping";
+import { mapAuction, mapLiveAuctionsBasic } from "./response/auctionMapping";
 
 export default class AuctionRouter extends BaseRouter {
     constructor(
@@ -33,6 +33,7 @@ export default class AuctionRouter extends BaseRouter {
             imageUpload.single("image"),
             this.submitAuction
         );
+        this.router.get("/live", this.getLiveAuctions);
         this.router.post(
             "/media/authenticate",
             auth(),
@@ -63,6 +64,15 @@ export default class AuctionRouter extends BaseRouter {
             this.auctionGoLive
         );
     }
+
+    public getLiveAuctions = async (_req: Request, res: Response) => {
+        const paginatedAuctions = await this.auctionService.getLiveAuctions();
+
+        res.json({
+            data: mapLiveAuctionsBasic(paginatedAuctions.data),
+            count: paginatedAuctions.count,
+        });
+    };
 
     public submitAuction = async (req: Request, res: Response) => {
         // When using file upload middleware, the body JSON arrives serialized
