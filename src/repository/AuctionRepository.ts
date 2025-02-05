@@ -90,6 +90,17 @@ export default class AuctionRepository {
         });
     };
 
+    public findByIdIncludeCarInformation = async (id: string) => {
+        return this.prisma.auction.findFirst({
+            where: {
+                id,
+            },
+            include: {
+                carInformation: true,
+            },
+        });
+    };
+
     /**
      * This method locks the Auction row (pessimistic locking)
      * It uses FOR NO KEY UPDATE, so that you can still create rows in other tables with foreign keys in Auction (like Bids)
@@ -163,6 +174,21 @@ export default class AuctionRepository {
         return this.prisma.auction.update({
             data: {
                 state: newState,
+            },
+            where: {
+                id,
+            },
+        });
+    };
+
+    public updateStateToLiveAndPrettyId = async (
+        id: string,
+        prettyId: string
+    ) => {
+        return this.prisma.auction.update({
+            data: {
+                state: AuctionState.LIVE,
+                prettyId,
             },
             where: {
                 id,

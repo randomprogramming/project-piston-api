@@ -21,6 +21,7 @@ import AuctionWebSocketService from "./service/ws/AuctionWebSocketService";
 import BidRepository from "./repository/BidRepository";
 import BidService from "./service/BidService";
 import BidRouter from "./router/BidRouter";
+import AuctionService from "./service/AuctionService";
 
 export default class Server {
     private app: Express;
@@ -36,6 +37,7 @@ export default class Server {
     private cloudinaryService: CloudinaryService;
     private auctionWebSocketService: AuctionWebSocketService;
     private bidService: BidService;
+    private auctionService: AuctionService;
 
     constructor() {
         this.app = express();
@@ -58,6 +60,7 @@ export default class Server {
             this.httpServer
         );
         this.bidService = new BidService(this.bidRepo, this.auctionRepo);
+        this.auctionService = new AuctionService(this.auctionRepo);
     }
 
     private setupMiddleware() {
@@ -88,6 +91,7 @@ export default class Server {
             new PingRouter(),
             new AuthRouter(this.accountRepo),
             new AuctionRouter(
+                this.auctionService,
                 this.auctionRepo,
                 this.mediaRepo,
                 this.imageStorage,

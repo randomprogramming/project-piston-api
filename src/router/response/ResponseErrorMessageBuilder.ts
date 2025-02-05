@@ -25,7 +25,7 @@ export default class ResponseErrorMessageBuilder {
         return new ResponseErrorMessageBuilder("bid");
     }
 
-    private getMessage(): string {
+    public getMessage(): string {
         return [
             ResponseErrorMessageBuilder.ERR_CODE,
             this.category,

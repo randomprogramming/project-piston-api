@@ -134,7 +134,9 @@ enum AuctionState {
 }
 
 model Auction {
-  id String @id @default(uuid())
+  id       String  @id @default(uuid())
+  /// Pretty version of the ID, which will be used for URLs and auction fetching
+  prettyId String? @unique
 
   state AuctionState
 

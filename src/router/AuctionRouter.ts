@@ -3,6 +3,7 @@ import type AuctionRepository from "../repository/AuctionRepository";
 import type MediaRepository from "../repository/MediaRepository";
 import type { ImageStorage } from "../imagestorage/ImageStorage";
 import type CloudinaryService from "../service/CloudinaryService";
+import type AuctionService from "../service/AuctionService";
 import BaseRouter, { API_VERSION } from "./BaseRouter";
 import { auth, hasAdminRole } from "../util/auth/middleware";
 import { parseAuctionDto } from "../dto/auction";
@@ -17,6 +18,7 @@ import { parseMediaUploadDto } from "../dto/media";
 
 export default class AuctionRouter extends BaseRouter {
     constructor(
+        private auctionService: AuctionService,
         private auctionRepo: AuctionRepository,
         private mediaRepo: MediaRepository,
         private imageStorage: ImageStorage,
@@ -204,25 +206,13 @@ export default class AuctionRouter extends BaseRouter {
 
     public auctionGoLive = async (req: Request, res: Response) => {
         const id = parseId(req.params);
-        const auction = await this.auctionRepo.findById(id);
+        const result = await this.auctionService.auctionGoLive(id);
 
-        if (!auction) {
-            return ResponseErrorMessageBuilder.auction()
-                .addDetail("not_found")
-                .send(res, HttpStatus.NotFound);
+        if (!result.ok) {
+            res.status(HttpStatus.BadRequest).send(result.error);
+            return;
         }
 
-        if (auction.state !== AuctionState.UNDER_REVIEW) {
-            return ResponseErrorMessageBuilder.auction()
-                .addDetail("invalid_state")
-                .log(
-                    "auctionGoLive",
-                    `Expected state UNDER_REVIEW, found '${auction.state}'`
-                )
-                .send(res);
-        }
-
-        await this.auctionRepo.updateStateById(id, AuctionState.LIVE);
         res.send();
     };
 }
