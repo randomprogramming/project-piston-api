@@ -29,10 +29,18 @@ export default class BidService {
                 if (!auction) {
                     return Err("auction_not_found");
                 }
-                // TODO: Check: AuctionState === LIVE && now() => auction.startDate && now() < auction.endDate
+
+                const now = new Date();
                 if (auction.state !== AuctionState.LIVE) {
                     return Err("auction_not_live");
                 }
+                if (!auction.startDate || now < auction.startDate) {
+                    return Err("auction_not_started");
+                }
+                if (!auction.endDate || now > auction.endDate) {
+                    return Err("auction_ended");
+                }
+
                 const currentBid = await this.getCurrentBidForAuction(
                     auctionId
                 );

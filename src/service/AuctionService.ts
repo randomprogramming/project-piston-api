@@ -47,7 +47,16 @@ export default class AuctionService {
         }
 
         const prettyId = this.generatePrettyId(auction.carInformation);
-        await this.auctionRepo.updateStateToLiveAndPrettyId(id, prettyId);
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 7);
+
+        await this.auctionRepo.updateStateToLiveAndPrettyIdAndStartAndEndDates(
+            id,
+            prettyId,
+            startDate,
+            endDate
+        );
         logger.info(
             `Auction '${auction.id}' is live with prettyId '${auction.prettyId}'`
         );

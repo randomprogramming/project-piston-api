@@ -127,6 +127,8 @@ enum AuctionState {
   /// look at the auction and decide if the auction is ready to go LIVE or back to PENDING_CHANGES
   UNDER_REVIEW
   /// Auction is live and can be publicly seen
+  /// Note that the the auction might not be accepting bids yet at this time, as the auction might not have
+  /// started yet, or maybe it has already ended.
   LIVE
   /// Auction has been rejected for some reason
   // TODO: We should somewhere save the reason why it was rejected
@@ -135,10 +137,12 @@ enum AuctionState {
 
 model Auction {
   id       String  @id @default(uuid())
-  /// Pretty version of the ID, which will be used for URLs and auction fetching
+  /// Pretty version of the ID, which is used for URLs and auction fetching
   prettyId String? @unique
 
-  state AuctionState
+  state     AuctionState
+  startDate DateTime?
+  endDate   DateTime?
 
   carInformation   AuctionCarInformation @relation(fields: [carInformationId], references: [id])
   carInformationId String                @unique

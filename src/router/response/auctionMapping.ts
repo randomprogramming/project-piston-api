@@ -18,6 +18,8 @@ export function mapAuction(a: AuctionWithCarInformationAndMediaAndSeller) {
         id: a.id,
         prettyId: a.prettyId,
         state: a.state,
+        startDate: a.startDate,
+        endDate: a.endDate,
         carInformation: {
             ueCarBrand: a.carInformation.ueCarBrand,
             ueCarModel: a.carInformation.ueCarModel,

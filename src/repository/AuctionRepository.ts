@@ -182,14 +182,18 @@ export default class AuctionRepository {
         });
     };
 
-    public updateStateToLiveAndPrettyId = async (
+    public updateStateToLiveAndPrettyIdAndStartAndEndDates = async (
         id: string,
-        prettyId: string
+        prettyId: string,
+        startDate: Date,
+        endDate: Date
     ) => {
         return this.prisma.auction.update({
             data: {
                 state: AuctionState.LIVE,
                 prettyId,
+                startDate,
+                endDate,
             },
             where: {
                 id,
