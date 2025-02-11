@@ -116,6 +116,7 @@ model ContactDetails {
   updatedAt DateTime @updatedAt
 }
 
+// TODO: We need a "CANCELLED" state, for when a user/admin needs to cancel a auction for whatever reason.
 enum AuctionState {
   /// The initial state when a user first submits an auction with only basic info, which then needs to be approved by an admin
   SUBMITTED
