@@ -60,4 +60,24 @@ export default class BidRepository {
             },
         });
     };
+
+    public findManyForAuctionIdIncludeBidderOrderByCreatedAtDesc = async (
+        auctionId: string
+    ) => {
+        return this.prisma.bid.findMany({
+            where: {
+                auctionId,
+            },
+            include: {
+                bidder: {
+                    select: {
+                        username: true,
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+    };
 }

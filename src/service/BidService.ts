@@ -74,4 +74,19 @@ export default class BidService {
     public getCurrentBidAndBidderForAuction = async (auctionId: string) => {
         return this.bidRepo.findCurrentBidForAuctionIncludeBidder(auctionId);
     };
+
+    public paginatedCommentsForAuction = async (auctionId: string) => {
+        const bids =
+            await this.bidRepo.findManyForAuctionIdIncludeBidderOrderByCreatedAtDesc(
+                auctionId
+            );
+
+        return {
+            data: bids,
+            page: 1,
+            totalPages: 1,
+            pageSize: 0,
+            count: 0,
+        };
+    };
 }

@@ -45,14 +45,19 @@ export default class BidRouter extends BaseRouter {
 
         this.auctionWSService.emitNewCurrentBid(
             auctionId,
-            mapBid(bidResult.value, req.user!.id)
+            mapBid(bidResult.value, req.user!.username)
         );
         res.status(HttpStatus.Created).send();
     };
 
     public getAuctionBids = async (req: Request, res: Response) => {
-        // TODO: Finishme, with pagination!!!!
-        res.send();
+        const auctionId = parseId(req.params);
+
+        const paginatedBids = await this.bidService.paginatedCommentsForAuction(
+            auctionId
+        );
+
+        res.json(paginatedBids);
     };
 
     public getCurrentBid = async (req: Request, res: Response) => {
