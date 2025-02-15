@@ -2,13 +2,7 @@ import type {
     AuctionCarInformationDto,
     AuctionContactDetailsDto,
 } from "../dto/auction";
-import {
-    AuctionState,
-    type Prisma,
-    type PrismaClient,
-    type Auction,
-    ImageGroup,
-} from "@prisma/client";
+import { AuctionState, type PrismaClient, ImageGroup } from "@prisma/client";
 
 export default class AuctionRepository {
     constructor(private prisma: PrismaClient) {}
@@ -100,24 +94,6 @@ export default class AuctionRepository {
                 carInformation: true,
             },
         });
-    };
-
-    /**
-     * This method locks the Auction row (pessimistic locking)
-     * It uses FOR NO KEY UPDATE, so that you can still create rows in other tables with foreign keys in Auction (like Bids)
-     */
-    public findByIdLockRow = async (
-        tx: Prisma.TransactionClient,
-        id: string
-    ) => {
-        return (
-            await tx.$queryRaw<Auction[]>`
-                    SELECT *
-                    FROM "Auction"
-                    WHERE id = ${id}
-                    FOR NO KEY UPDATE
-                `
-        )[0];
     };
 
     public findByIdAndSellerId = async (id: string, sellerId: string) => {

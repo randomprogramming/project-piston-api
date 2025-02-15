@@ -27,6 +27,8 @@ model Account {
 
   /// An account created through Google or other providers won't have a username immediately
   /// We need to create the account and then prompt the user for a username
+  // TODO: should be unique by case insensitive. We can do this by creating a manual migration
+  // file and create a index on the lower(username) col.
   username String?      @unique
   email    String       @unique
   provider AuthProvider

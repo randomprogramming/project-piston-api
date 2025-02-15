@@ -18,6 +18,7 @@ export default class CloudinaryService {
         });
     }
 
+    // TODO: We should be putting the images into a specific bucket for the auctionId, so that it is nicely sorted
     public authenticateCloudinary = () => {
         const timestamp = Math.round(new Date().getTime() / 1000);
 

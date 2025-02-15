@@ -22,6 +22,7 @@ import BidRepository from "./repository/BidRepository";
 import BidService from "./service/BidService";
 import BidRouter from "./router/BidRouter";
 import AuctionService from "./service/AuctionService";
+import AuctionRepository2 from "./repository/AuctionRepository2";
 
 export default class Server {
     private app: Express;
@@ -30,6 +31,8 @@ export default class Server {
 
     private accountRepo: AccountRepository;
     private auctionRepo: AuctionRepository;
+    // TODO: Replace auctionRepo with Auctionrepo2
+    private auctionRepo2: AuctionRepository2;
     private mediaRepo: MediaRepository;
     private bidRepo: BidRepository;
 
@@ -51,6 +54,7 @@ export default class Server {
 
         this.accountRepo = new AccountRepository(this.prismaClient);
         this.auctionRepo = new AuctionRepository(this.prismaClient);
+        this.auctionRepo2 = new AuctionRepository2(this.prismaClient);
         this.mediaRepo = new MediaRepository(this.prismaClient);
         this.bidRepo = new BidRepository(this.prismaClient);
 
@@ -59,8 +63,11 @@ export default class Server {
         this.auctionWebSocketService = new AuctionWebSocketService(
             this.httpServer
         );
-        this.bidService = new BidService(this.bidRepo, this.auctionRepo);
-        this.auctionService = new AuctionService(this.auctionRepo);
+        this.bidService = new BidService(this.bidRepo, this.auctionRepo2);
+        this.auctionService = new AuctionService(
+            this.auctionRepo,
+            this.auctionRepo2
+        );
     }
 
     private setupMiddleware() {

@@ -15,17 +15,18 @@ import path from "path";
 import { parseId, parsePrettyId } from "../dto/common";
 import { AuctionState, ImageGroup, Role } from "@prisma/client";
 import { parseMediaUploadDto } from "../dto/media";
-import { mapAuction, mapLiveAuctionsBasic } from "./response/auctionMapping";
+import { mapAuction } from "./response/auctionMapping";
 
 export default class AuctionRouter extends BaseRouter {
     constructor(
         private auctionService: AuctionService,
+        // TODO: should not be using the repo directly...
         private auctionRepo: AuctionRepository,
         private mediaRepo: MediaRepository,
         private imageStorage: ImageStorage,
         private cloudinaryService: CloudinaryService
     ) {
-        super(API_VERSION.V1, "/auction");
+        super(API_VERSION.V1, "/auctions");
 
         this.router.post(
             "/",
@@ -33,7 +34,7 @@ export default class AuctionRouter extends BaseRouter {
             imageUpload.single("image"),
             this.submitAuction
         );
-        this.router.get("/live", this.getLiveAuctions);
+        this.router.get("/", this.getAuctionsPaginated);
         this.router.post(
             "/media/authenticate",
             auth(),
@@ -65,12 +66,33 @@ export default class AuctionRouter extends BaseRouter {
         );
     }
 
-    public getLiveAuctions = async (_req: Request, res: Response) => {
-        const paginatedAuctions = await this.auctionService.getLiveAuctions();
+    public getAuctionsPaginated = async (req: Request, res: Response) => {
+        const paginatedResponse =
+            await this.auctionService.getAuctionsPaginated();
 
         res.json({
-            data: mapLiveAuctionsBasic(paginatedAuctions.data),
-            count: paginatedAuctions.count,
+            data: paginatedResponse.auctions.map((a) => {
+                return {
+                    prettyId: a.prettyId,
+                    state: a.state,
+                    startDate: a.startDate,
+                    endDate: a.endDate,
+                    carInformation: {
+                        ueCarBrand: a.carInformation.ueCarBrand,
+                        ueCarModel: a.carInformation.ueCarModel,
+                        modelYear: a.carInformation.modelYear,
+                        trim: a.carInformation.trim,
+                        carModelName: a.carInformation.carModelName,
+                        carBrandName: a.carInformation.carBrandName,
+                    },
+                    currentBid:
+                        a.bids.length > 0
+                            ? { amount: a.bids[0].amount }
+                            : undefined,
+                    coverPhoto: a.media.length > 0 ? a.media[0].url : undefined,
+                };
+            }),
+            count: paginatedResponse.totalCount,
         });
     };
 

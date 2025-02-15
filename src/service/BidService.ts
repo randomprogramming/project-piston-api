@@ -1,14 +1,14 @@
 import type { BidDto } from "../dto/bid";
 import type BidRepository from "../repository/BidRepository";
-import type AuctionRepository from "../repository/AuctionRepository";
 import { Err, Ok, type Result } from "../result";
 import { AuctionState, type Bid } from "@prisma/client";
 import logger from "../logger";
+import type AuctionRepository2 from "../repository/AuctionRepository2";
 
 export default class BidService {
     constructor(
         private bidRepo: BidRepository,
-        private auctionRepo: AuctionRepository
+        private auctionRepo: AuctionRepository2
     ) {}
 
     public placeBid = async (
@@ -40,6 +40,7 @@ export default class BidService {
                 if (!auction.endDate || now > auction.endDate) {
                     return Err("auction_ended");
                 }
+                // TODO: If time until end is less than ~5 mins? or something, we need to extend the auction to prevent sniping
 
                 const currentBid = await this.getCurrentBidForAuction(
                     auctionId

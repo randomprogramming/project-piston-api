@@ -5,16 +5,27 @@ import logger from "../logger";
 import { hashDate } from "../util/date";
 import ResponseErrorMessageBuilder from "../router/response/ResponseErrorMessageBuilder";
 import { sanitizeURLString } from "../util/url";
+import type AuctionRepository2 from "../repository/AuctionRepository2";
 
 export default class AuctionService {
-    constructor(private auctionRepo: AuctionRepository) {}
+    constructor(
+        private auctionRepo: AuctionRepository,
+        private auctionRepo2: AuctionRepository2
+    ) {}
 
     private generatePrettyId = (info: AuctionCarInformation) => {
+        const nameArr: string[] = [];
+        nameArr.push(info.modelYear.toString());
         // TODO: Right now we are using user-entry brand and model because we don't have the system in place to
         // Convert them from user entry to actual brand and model fields.. When we do, we should use that here
-        const str = `${info.modelYear}-${info.ueCarBrand}-${info.ueCarModel}-${
-            info.trim
-        }-${hashDate(info.createdAt)}`;
+        nameArr.push(info.ueCarBrand);
+        nameArr.push(info.ueCarModel);
+        if (info.trim?.length) {
+            nameArr.push(info.trim);
+        }
+        nameArr.push(hashDate(info.createdAt));
+
+        const str = nameArr.join("-");
         const sanitized = sanitizeURLString(str);
         return sanitized.toLowerCase();
     };
@@ -82,15 +93,7 @@ export default class AuctionService {
         return auction;
     };
 
-    public getLiveAuctions = async () => {
-        // TODO: Should also take into consideration auction startDate and auctionEndDate
-        const auctions =
-            await this.auctionRepo.findManyWhereStateLiveIncludeCarInformationAndCurrentBidAndCoverPhoto();
-
-        // TODO: Probably will need pagination, more importantly, filters
-        return {
-            data: auctions,
-            count: auctions.length,
-        };
+    public getAuctionsPaginated = async () => {
+        return this.auctionRepo2.findManyBasicPaginated();
     };
 }
