@@ -129,7 +129,11 @@ export default class AuctionRouter extends BaseRouter {
     };
 
     public getAuctionsBySellerId = async (req: Request, res: Response) => {
-        const auctions = await this.auctionRepo.findBySellerIdIncludeAll(
+        // TODO: read the ID from the url.. make sure to do that change on the frontend also
+        // Also, this will be "public" data which can be seen by anyone, so use a mapper to return onmly
+        // some data
+        // if req.query.sellerId === req.user.id, we can return some extra data.
+        const auctions = await this.auctionService.getAuctionsOfSeller(
             req.user!.id
         );
 
@@ -138,7 +142,7 @@ export default class AuctionRouter extends BaseRouter {
 
     public getPreview = async (req: Request, res: Response) => {
         const id = parseId(req.params);
-        const auction = await this.auctionRepo.findByIdIncludeAll(id);
+        const auction = await this.auctionService.getAuctionById(id);
 
         // The owner of the auction and any admin may see the preview
         const maySeePreview =
@@ -157,8 +161,6 @@ export default class AuctionRouter extends BaseRouter {
         const auction = await this.auctionService.getAuction(prettyId);
 
         if (!auction) {
-            console.log("auction not found");
-
             return ResponseErrorMessageBuilder.auction()
                 .addDetail("not_found")
                 .log("getAuction", `Auction '${prettyId}' not found`)

@@ -1,5 +1,9 @@
 import type AuctionRepository from "../repository/AuctionRepository";
-import { AuctionState, type AuctionCarInformation } from "@prisma/client";
+import {
+    AuctionState,
+    ImageGroup,
+    type AuctionCarInformation,
+} from "@prisma/client";
 import { Err, Ok, type Result } from "../result";
 import logger from "../logger";
 import { hashDate } from "../util/date";
@@ -78,22 +82,45 @@ export default class AuctionService {
      * Get the public view of an auction.
      */
     public getAuction = async (prettyId: string) => {
-        // TODO: use  include: {
-        //     _count: {
-        //         select: {
-        //             bids: true,
-        //         }
-        //     },
-        // },
-        // to also return the bid count and comment count and etc easily.
-        const auction =
-            await this.auctionRepo.findByPrettyIdIncludeCarInformationAndMediaAndSeller(
-                prettyId
-            );
-        return auction;
+        return this.auctionRepo2.getFull(prettyId);
+    };
+
+    public getAuctionById = async (id: string) => {
+        const auction = await this.auctionRepo2.findUnique(
+            {
+                id,
+            },
+            {}
+        );
+        if (!auction || !auction.prettyId) {
+            return null;
+        }
+
+        return this.getAuction(auction.prettyId);
     };
 
     public getAuctionsPaginated = async () => {
         return this.auctionRepo2.findManyBasicPaginated();
+    };
+
+    public getAuctionsOfSeller = async (sellerId: string) => {
+        return this.auctionRepo2.findMany(
+            { sellerId },
+            {
+                include: {
+                    carInformation: true,
+                    contactDetails: true,
+                    media: {
+                        where: {
+                            group: ImageGroup.EXTERIOR,
+                        },
+                        orderBy: {
+                            order: "asc",
+                        },
+                        take: 1,
+                    },
+                },
+            }
+        );
     };
 }

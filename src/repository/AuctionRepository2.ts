@@ -20,7 +20,9 @@ export default class AuctionRepository2 {
 
     public async findManyBasicPaginated() {
         // TODO: In the filters include a "ended", "not_started" fields, based on which we will include LIVE auctions which have either not yet started or already ended
-        const where: Prisma.AuctionWhereInput = {};
+        const where: Prisma.AuctionWhereInput = {
+            state: AuctionState.LIVE,
+        };
 
         const [auctions, totalCount] = await Promise.all([
             this.prisma.auction.findMany({
@@ -117,6 +119,39 @@ export default class AuctionRepository2 {
             include: options.include,
         });
     }
+
+    public getFull = async (prettyId: string) => {
+        return this.prisma.auction.findUnique({
+            where: {
+                prettyId,
+            },
+            include: {
+                carInformation: true,
+                _count: {
+                    select: {
+                        bids: true,
+                    },
+                },
+                media: {
+                    orderBy: [
+                        {
+                            // TODO: Verify that this actually works, since group is an enum
+                            group: "asc",
+                        },
+                        {
+                            order: "asc",
+                        },
+                    ],
+                },
+                seller: {
+                    select: {
+                        username: true,
+                        createdAt: true,
+                    },
+                },
+            },
+        });
+    };
 
     public async updateAuction(
         id: string,
