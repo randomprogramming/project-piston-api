@@ -144,11 +144,9 @@ export default class AuctionRepository2 {
         });
     };
 
-    public getFull = async (prettyId: string) => {
+    public getFull = async (where: Prisma.AuctionWhereUniqueInput) => {
         return this.prisma.auction.findUnique({
-            where: {
-                prettyId,
-            },
+            where,
             include: {
                 carInformation: {
                     include: {

@@ -150,6 +150,10 @@ export default class AuctionRouter extends BaseRouter {
         if (!auction || !maySeePreview) {
             return ResponseErrorMessageBuilder.auction()
                 .addDetail(id, "not_found")
+                .log(
+                    "getPreview",
+                    `Auction defined: '${!!auction}', maySeePreview: '${maySeePreview}'`
+                )
                 .send(res, HttpStatus.NotFound);
         }
 

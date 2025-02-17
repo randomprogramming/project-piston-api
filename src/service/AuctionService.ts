@@ -1,4 +1,3 @@
-import type AuctionRepository from "../repository/AuctionRepository";
 import type AuctionRepository2 from "../repository/AuctionRepository2";
 import {
     AuctionState,
@@ -12,10 +11,7 @@ import ResponseErrorMessageBuilder from "../router/response/ResponseErrorMessage
 import { sanitizeURLString } from "../util/url";
 
 export default class AuctionService {
-    constructor(
-        private auctionRepo: AuctionRepository,
-        private auctionRepo2: AuctionRepository2
-    ) {}
+    constructor(private auctionRepo: AuctionRepository2) {}
 
     private generatePrettyId = (info: AuctionCarInformation) => {
         const nameArr: string[] = [];
@@ -38,7 +34,7 @@ export default class AuctionService {
     public auctionGoLive = async (
         id: string
     ): Promise<Result<undefined, string>> => {
-        const auction = await this.auctionRepo2.findByIdIncludeCarInformation(
+        const auction = await this.auctionRepo.findByIdIncludeCarInformation(
             id
         );
 
@@ -67,13 +63,13 @@ export default class AuctionService {
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + 7);
 
-        await this.auctionRepo2.auctionGoLive(id, {
+        await this.auctionRepo.auctionGoLive(id, {
             prettyId,
             startDate,
             endDate,
         });
         logger.info(
-            `Auction '${auction.id}' is live with prettyId '${auction.prettyId}'`
+            `Auction '${auction.id}' is live with prettyId '${prettyId}'`
         );
         return Ok();
     };
@@ -82,24 +78,20 @@ export default class AuctionService {
      * Get the public view of an auction.
      */
     public getAuction = async (prettyId: string) => {
-        return this.auctionRepo2.getFull(prettyId);
+        return this.auctionRepo.getFull({ prettyId });
     };
 
     public getAuctionById = async (id: string) => {
-        const auction = await this.auctionRepo2.findById(id);
-        if (!auction || !auction.prettyId) {
-            return null;
-        }
-
-        return this.getAuction(auction.prettyId);
+        return this.auctionRepo.getFull({ id });
     };
 
     public getAuctionsPaginated = async () => {
-        return this.auctionRepo2.findManyBasicPaginated();
+        return this.auctionRepo.findManyBasicPaginated();
     };
 
     public getAuctionsOfSeller = async (sellerId: string) => {
-        return this.auctionRepo2.findMany(
+        // TODO: Use auctionRepo.findManyBasicPaginated here
+        return this.auctionRepo.findMany(
             { sellerId },
             {
                 include: {
