@@ -21,50 +21,52 @@ interface CityData {
     // Filled in at the 2nd step, when reading alternateNames.txt
     preferredName: string | null;
     altNames: string[];
+    lat?: number;
+    lng?: number;
 }
 
-const EUROPEAN_COUNTRIES: Record<string, string> = {
-    AD: "🇦🇩",
-    AT: "🇦🇹",
-    BE: "🇧🇪",
-    BG: "🇧🇬",
-    BY: "🇧🇾",
-    CH: "🇨🇭",
-    CY: "🇨🇾",
-    CZ: "🇨🇿",
-    DE: "🇩🇪",
-    DK: "🇩🇰",
-    EE: "🇪🇪",
-    ES: "🇪🇸",
-    FI: "🇫🇮",
-    FR: "🇫🇷",
-    GB: "🇬🇧",
-    GR: "🇬🇷",
-    HR: "🇭🇷",
-    HU: "🇭🇺",
-    IE: "🇮🇪",
-    IS: "🇮🇸",
-    IT: "🇮🇹",
-    LT: "🇱🇹",
-    LU: "🇱🇺",
-    LV: "🇱🇻",
-    MC: "🇲🇨",
-    MD: "🇲🇩",
-    ME: "🇲🇪",
-    MK: "🇲🇰",
-    MT: "🇲🇹",
-    NL: "🇳🇱",
-    NO: "🇳🇴",
-    PL: "🇵🇱",
-    PT: "🇵🇹",
-    RO: "🇷🇴",
-    SE: "🇸🇪",
-    SI: "🇸🇮",
-    SK: "🇸🇰",
-    SM: "🇸🇲",
-    UA: "🇺🇦",
-    VA: "🇻🇦",
-};
+const EUROPEAN_COUNTRIES: Set<String> = new Set([
+    "AD",
+    "AT",
+    "BE",
+    "BG",
+    "BY",
+    "CH",
+    "CY",
+    "CZ",
+    "DE",
+    "DK",
+    "EE",
+    "ES",
+    "FI",
+    "FR",
+    "GB",
+    "GR",
+    "HR",
+    "HU",
+    "IE",
+    "IS",
+    "IT",
+    "LT",
+    "LU",
+    "LV",
+    "MC",
+    "MD",
+    "ME",
+    "MK",
+    "MT",
+    "NL",
+    "NO",
+    "PL",
+    "PT",
+    "RO",
+    "SE",
+    "SI",
+    "SK",
+    "SM",
+    "UA",
+    "VA",
+]);
 
 async function downloadFile(url: string, outputPath: string) {
     if (fs.existsSync(outputPath)) {
@@ -155,11 +157,13 @@ async function parseCitiesFile(): Promise<Map<string, CityData>> {
         // [0] geonameid, [1] name, ... [8] country code, etc.
         const geonameid = parts[0];
         const defaultCityName = parts[1];
+        const lat = parseFloat(parts[4]);
+        const lng = parseFloat(parts[5]);
         const countryCode = parts[8];
 
         // We want only EU countries.. If for some reason in the future
         // we want all cities, just remove this line
-        if (!EUROPEAN_COUNTRIES[countryCode]) continue;
+        if (!EUROPEAN_COUNTRIES.has(countryCode)) continue;
 
         cities.set(geonameid, {
             geonameid,
@@ -167,6 +171,8 @@ async function parseCitiesFile(): Promise<Map<string, CityData>> {
             countryCode,
             preferredName: null,
             altNames: [],
+            lat,
+            lng,
         });
     }
     return cities;
@@ -219,24 +225,14 @@ async function seedDatabase(
     console.log("Seeding database...");
 
     try {
-        const uniqueCountries = Array.from(
-            new Set([...cities.values()].map((city) => city.countryCode))
-        ).map((code) => ({
-            code,
-            emoji: EUROPEAN_COUNTRIES[code] || "🏳️",
-        }));
-
-        await prisma.country.createMany({
-            data: uniqueCountries,
-            skipDuplicates: true,
-        });
-
         // Step 2: Prepare cities for batch insert
         const cityDataArray = Array.from(cities.entries()).map(
             ([geonameid, cityData]) => ({
                 id: geonameid,
                 name: cityData.preferredName || cityData.defaultCityName,
                 countryCode: cityData.countryCode,
+                lng: cityData.lng,
+                lat: cityData.lat,
             })
         );
 

@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
@@ -199,22 +200,14 @@ model Bid {
   updatedAt DateTime @updatedAt
 }
 
-model Country {
-  code String @id
-
-  emoji  String
-  cities City[]
-
-  updatedAt DateTime @updatedAt
-}
-
 model City {
   id String @id
 
   name        String
   countryCode String
+  lng Float?
+  lat Float?
 
-  country        Country         @relation(fields: [countryCode], references: [code])
   alternateNames AlternateName[]
 
   updatedAt DateTime @updatedAt

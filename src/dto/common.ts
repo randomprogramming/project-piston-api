@@ -13,3 +13,10 @@ const PrettyIdSchema = z.object({
 export function parsePrettyId(obj: any) {
     return PrettyIdSchema.parse(obj)["pretty_id"];
 }
+
+const QSchema = z.object({
+    q: z.string(),
+});
+export function parseQ(obj: any) {
+    return QSchema.parse(obj).q;
+}

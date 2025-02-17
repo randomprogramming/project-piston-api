@@ -23,6 +23,8 @@ import BidService from "./service/BidService";
 import BidRouter from "./router/BidRouter";
 import AuctionService from "./service/AuctionService";
 import AuctionRepository2 from "./repository/AuctionRepository2";
+import LocationRepository from "./repository/LocationRepository";
+import LocationRouter from "./router/LocationRouter";
 
 export default class Server {
     private app: Express;
@@ -35,6 +37,7 @@ export default class Server {
     private auctionRepo2: AuctionRepository2;
     private mediaRepo: MediaRepository;
     private bidRepo: BidRepository;
+    private locationRepo: LocationRepository;
 
     private imageStorage: ImageStorage;
     private cloudinaryService: CloudinaryService;
@@ -57,6 +60,7 @@ export default class Server {
         this.auctionRepo2 = new AuctionRepository2(this.prismaClient);
         this.mediaRepo = new MediaRepository(this.prismaClient);
         this.bidRepo = new BidRepository(this.prismaClient);
+        this.locationRepo = new LocationRepository(this.prismaClient);
 
         this.imageStorage = new LocalImageStorageService("/images/auctions");
         this.cloudinaryService = new CloudinaryService();
@@ -105,6 +109,7 @@ export default class Server {
                 this.cloudinaryService
             ),
             new BidRouter(this.bidService, this.auctionWebSocketService),
+            new LocationRouter(this.locationRepo),
         ];
 
         for (const router of ALL_ROUTERS) {
