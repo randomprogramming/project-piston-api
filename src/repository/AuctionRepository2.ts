@@ -110,15 +110,39 @@ export default class AuctionRepository2 {
         });
     }
 
-    public async findUnique(
-        filters: Partial<{ id: string; prettyId: string }>,
-        options: Partial<{ include: Prisma.AuctionInclude }>
-    ) {
-        return this.prisma.auction.findUnique({
-            where: { id: filters.id, prettyId: filters.prettyId },
-            include: options.include,
+    public findById = async (id: string) => {
+        return this.prisma.auction.findFirst({
+            where: {
+                id,
+            },
         });
-    }
+    };
+
+    public findByIdIncludeCarInformation = async (id: string) => {
+        return this.prisma.auction.findFirst({
+            where: {
+                id,
+            },
+            include: {
+                carInformation: true,
+            },
+        });
+    };
+
+    public auctionGoLive = async (
+        id: string,
+        data: { prettyId: string; startDate: Date; endDate: Date }
+    ) => {
+        return this.prisma.auction.update({
+            data: {
+                state: AuctionState.LIVE,
+                ...data,
+            },
+            where: {
+                id,
+            },
+        });
+    };
 
     public getFull = async (prettyId: string) => {
         return this.prisma.auction.findUnique({

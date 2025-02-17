@@ -1,4 +1,5 @@
 import type AuctionRepository from "../repository/AuctionRepository";
+import type AuctionRepository2 from "../repository/AuctionRepository2";
 import {
     AuctionState,
     ImageGroup,
@@ -9,7 +10,6 @@ import logger from "../logger";
 import { hashDate } from "../util/date";
 import ResponseErrorMessageBuilder from "../router/response/ResponseErrorMessageBuilder";
 import { sanitizeURLString } from "../util/url";
-import type AuctionRepository2 from "../repository/AuctionRepository2";
 
 export default class AuctionService {
     constructor(
@@ -27,7 +27,8 @@ export default class AuctionService {
         if (info.trim?.length) {
             nameArr.push(info.trim);
         }
-        nameArr.push(hashDate(info.createdAt));
+        // Adding a random set of characters to the URL to avoid duplicates
+        nameArr.push(hashDate(new Date()));
 
         const str = nameArr.join("-");
         const sanitized = sanitizeURLString(str);
@@ -37,7 +38,7 @@ export default class AuctionService {
     public auctionGoLive = async (
         id: string
     ): Promise<Result<undefined, string>> => {
-        const auction = await this.auctionRepo.findByIdIncludeCarInformation(
+        const auction = await this.auctionRepo2.findByIdIncludeCarInformation(
             id
         );
 
@@ -66,12 +67,11 @@ export default class AuctionService {
         const endDate = new Date();
         endDate.setDate(endDate.getDate() + 7);
 
-        await this.auctionRepo.updateStateToLiveAndPrettyIdAndStartAndEndDates(
-            id,
+        await this.auctionRepo2.auctionGoLive(id, {
             prettyId,
             startDate,
-            endDate
-        );
+            endDate,
+        });
         logger.info(
             `Auction '${auction.id}' is live with prettyId '${auction.prettyId}'`
         );
@@ -86,12 +86,7 @@ export default class AuctionService {
     };
 
     public getAuctionById = async (id: string) => {
-        const auction = await this.auctionRepo2.findUnique(
-            {
-                id,
-            },
-            {}
-        );
+        const auction = await this.auctionRepo2.findById(id);
         if (!auction || !auction.prettyId) {
             return null;
         }

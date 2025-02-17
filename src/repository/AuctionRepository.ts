@@ -85,17 +85,6 @@ export default class AuctionRepository {
         });
     };
 
-    public findByIdIncludeCarInformation = async (id: string) => {
-        return this.prisma.auction.findFirst({
-            where: {
-                id,
-            },
-            include: {
-                carInformation: true,
-            },
-        });
-    };
-
     public findByIdAndSellerId = async (id: string, sellerId: string) => {
         return this.prisma.auction.findFirst({
             where: {
@@ -151,25 +140,6 @@ export default class AuctionRepository {
         return this.prisma.auction.update({
             data: {
                 state: newState,
-            },
-            where: {
-                id,
-            },
-        });
-    };
-
-    public updateStateToLiveAndPrettyIdAndStartAndEndDates = async (
-        id: string,
-        prettyId: string,
-        startDate: Date,
-        endDate: Date
-    ) => {
-        return this.prisma.auction.update({
-            data: {
-                state: AuctionState.LIVE,
-                prettyId,
-                startDate,
-                endDate,
             },
             where: {
                 id,

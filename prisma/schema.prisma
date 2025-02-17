@@ -92,7 +92,6 @@ model AuctionCarInformation {
   auction      Auction?
   auctionId    String?   @unique
 
-  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
@@ -114,7 +113,6 @@ model ContactDetails {
   auction   Auction?
   auctionId String?
 
-  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
@@ -198,5 +196,38 @@ model Bid {
   auctionId String
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Country {
+  code String @id
+
+  emoji  String
+  cities City[]
+
+  updatedAt DateTime @updatedAt
+}
+
+model City {
+  id String @id
+
+  name        String
+  countryCode String
+
+  country        Country         @relation(fields: [countryCode], references: [code])
+  alternateNames AlternateName[]
+
+  updatedAt DateTime @updatedAt
+}
+
+/// Alternate names for cities in different languages
+model AlternateName {
+  id String @id @default(uuid())
+
+  name String @unique
+
+  city   City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  cityId String
+
   updatedAt DateTime @updatedAt
 }
