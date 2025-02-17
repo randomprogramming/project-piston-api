@@ -3,7 +3,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["fullTextSearchPostgres"]
 }
 
 datasource db {
@@ -92,6 +91,8 @@ model AuctionCarInformation {
   carBrandName String?
   auction      Auction?
   auctionId    String?   @unique
+  city         City      @relation(fields: [cityId], references: [id])
+  cityId       String
 
   updatedAt DateTime @updatedAt
 }
@@ -205,10 +206,11 @@ model City {
 
   name        String
   countryCode String
-  lng Float?
-  lat Float?
+  lng         Float?
+  lat         Float?
 
   alternateNames AlternateName[]
+  carAuctions    AuctionCarInformation[]
 
   updatedAt DateTime @updatedAt
 }
@@ -217,7 +219,8 @@ model City {
 model AlternateName {
   id String @id @default(uuid())
 
-  name String @unique
+  name   String  @unique
+  locale String?
 
   city   City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
   cityId String

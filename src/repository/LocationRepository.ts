@@ -8,30 +8,43 @@ export default class LocationRepository {
 
         const cities = await this.prisma.city.findMany({
             where: {
-                OR: [
-                    { name: { contains: q, mode: "insensitive" } },
-                    {
-                        alternateNames: {
-                            some: {
-                                name: { contains: q, mode: "insensitive" },
-                            },
-                        },
-                    },
-                ],
+                name: { contains: q, mode: "insensitive" },
             },
             include: {
                 alternateNames: true,
             },
-            take: 50,
+            take: 24,
+        });
+
+        const alternateCities = await this.prisma.city.findMany({
+            where: {
+                alternateNames: {
+                    some: {
+                        name: { contains: q, mode: "insensitive" },
+                    },
+                },
+                id: {
+                    notIn: cities.map((c) => c.id),
+                },
+            },
+            include: {
+                alternateNames: true,
+            },
+            take: 24,
         });
 
         // Manual ranking to prioritize results
-        const rankedCities = cities.map((city) => {
+        const rankedCities = cities.concat(alternateCities).map((city) => {
             let rank = 0;
 
             // Exact match for city name
             if (city.name.toLowerCase() === q) {
-                rank += 3;
+                rank += 4;
+            }
+
+            // City name starts with query
+            if (city.name.toLowerCase().startsWith(q)) {
+                rank += 2;
             }
 
             // Exact match for alternate names

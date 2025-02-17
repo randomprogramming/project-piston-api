@@ -150,7 +150,11 @@ export default class AuctionRepository2 {
                 prettyId,
             },
             include: {
-                carInformation: true,
+                carInformation: {
+                    include: {
+                        city: true,
+                    },
+                },
                 _count: {
                     select: {
                         bids: true,

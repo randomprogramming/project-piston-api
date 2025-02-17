@@ -1,7 +1,12 @@
-import type { Auction, AuctionCarInformation, Media } from "@prisma/client";
+import type {
+    Auction,
+    AuctionCarInformation,
+    City,
+    Media,
+} from "@prisma/client";
 
 interface AuctionWithCarInformationAndMediaAndSeller extends Auction {
-    carInformation: AuctionCarInformation;
+    carInformation: AuctionCarInformation & { city: City };
     media: Media[];
     seller: {
         username: string | null;
@@ -23,6 +28,10 @@ export function mapAuction(a: AuctionWithCarInformationAndMediaAndSeller) {
             mileage: a.carInformation.mileage,
             carModelName: a.carInformation.carModelName,
             carBrandName: a.carInformation.carBrandName,
+            city: {
+                name: a.carInformation.city.name,
+                countryCode: a.carInformation.city.countryCode,
+            },
         },
         seller: {
             username: a.seller.username,

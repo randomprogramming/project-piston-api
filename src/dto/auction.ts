@@ -10,6 +10,7 @@ const AuctionCarInformationSchema = z.object({
     mileage: mileage(),
     carModelName: nullableString(),
     carBrandName: nullableString(),
+    cityId: z.string(),
 });
 export type AuctionCarInformationDto = z.infer<
     typeof AuctionCarInformationSchema

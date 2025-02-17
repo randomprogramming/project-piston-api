@@ -5,22 +5,27 @@ import http from "http";
 import path from "path";
 import unzipper from "unzipper";
 
+const CITIES_NAME = "cities1000";
+const ALT_NAMES_NAME = "alternateNames";
+
 const DATA_DIR = "./seed/data/";
-const CITIES_ZIP_URL = "http://download.geonames.org/export/dump/cities500.zip";
-const CITIES_ZIP_PATH = path.join(DATA_DIR, "cities500.zip");
-const CITIES_FILE_PATH = path.join(DATA_DIR, "cities500.txt");
-const ALT_NAMES_URL =
-    "http://download.geonames.org/export/dump/alternateNames.zip";
-const ALT_NAMES_ZIP_PATH = path.join(DATA_DIR, "alternateNames.zip");
-const ALT_NAMES_FILE_PATH = path.join(DATA_DIR, "alternateNames.txt");
+const CITIES_ZIP_URL = `http://download.geonames.org/export/dump/${CITIES_NAME}.zip`;
+const CITIES_ZIP_PATH = path.join(DATA_DIR, `${CITIES_NAME}.zip`);
+const CITIES_FILE_PATH = path.join(DATA_DIR, `${CITIES_NAME}.txt`);
+const ALT_NAMES_URL = `http://download.geonames.org/export/dump/${ALT_NAMES_NAME}.zip`;
+const ALT_NAMES_ZIP_PATH = path.join(DATA_DIR, `${ALT_NAMES_NAME}.zip`);
+const ALT_NAMES_FILE_PATH = path.join(DATA_DIR, `${ALT_NAMES_NAME}.txt`);
 
 interface CityData {
     geonameid: string;
     defaultCityName: string;
     countryCode: string;
-    // Filled in at the 2nd step, when reading alternateNames.txt
+    // Filled in when reading alternateNames.txt
     preferredName: string | null;
-    altNames: string[];
+    altNames: {
+        name: string;
+        locale?: string;
+    }[];
     lat?: number;
     lng?: number;
 }
@@ -111,12 +116,12 @@ async function extractZip(zipPath: string, outputDir: string) {
 }
 
 /**
- * Step 0: Download the cities500.txt and alternateNames.txt files
+ * Download the cities and alternateNames files
  */
 async function setupDataFiles() {
     if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 
-    // Download and extract cities500.zip
+    // Download and extract cities file
     if (!fs.existsSync(CITIES_FILE_PATH)) {
         await downloadFile(CITIES_ZIP_URL, CITIES_ZIP_PATH);
         await extractZip(CITIES_ZIP_PATH, DATA_DIR);
@@ -126,7 +131,7 @@ async function setupDataFiles() {
         );
     }
 
-    // Download and extract alternateNames.zip
+    // Download and extract alternateNames file
     if (!fs.existsSync(ALT_NAMES_FILE_PATH)) {
         await downloadFile(ALT_NAMES_URL, ALT_NAMES_ZIP_PATH);
         await extractZip(ALT_NAMES_ZIP_PATH, DATA_DIR);
@@ -138,10 +143,10 @@ async function setupDataFiles() {
 }
 
 /**
- * Step 1: Reading cities from the Geonames cities500.txt file
+ * Reading cities from the Geonames cities500.txt file
  */
 async function parseCitiesFile(): Promise<Map<string, CityData>> {
-    console.log("Reading cities500.txt...");
+    console.log(`Reading ${CITIES_NAME}...`);
     const cities = new Map<string, CityData>();
     const fileStream = fs.createReadStream(CITIES_FILE_PATH);
 
@@ -179,7 +184,7 @@ async function parseCitiesFile(): Promise<Map<string, CityData>> {
 }
 
 /**
- * Step 2: Stream through alternateNames.txt.
+ * Stream through alternateNames.txt.
  * For each line that belongs to one of our cities, save the alternate name.
  * If the name is marked as preferred (column 4 === "1") and no preferred name
  * has been set yet, use it as the city’s local name.
@@ -201,8 +206,8 @@ async function parseAlternateNames(
         if (parts.length < 5) continue;
 
         const geonameid = parts[1];
-        // Skip alternate names for cities not in our map.
-        if (!cities.has(geonameid)) continue;
+        const locale = parts[2].trim();
+        if (!cities.has(geonameid) || locale === "link") continue;
 
         const name = parts[3];
         const isPreferred = parts[4] === "1";
@@ -211,12 +216,15 @@ async function parseAlternateNames(
         if (isPreferred && !city.preferredName) {
             city.preferredName = name;
         }
-        city.altNames.push(name);
+        city.altNames.push({
+            name,
+            locale: locale.length > 0 ? locale : undefined,
+        });
     }
 }
 
 /**
- * Step 3: Seed the database.
+ * Seed the database.
  */
 async function seedDatabase(
     prisma: PrismaClient,
@@ -225,7 +233,7 @@ async function seedDatabase(
     console.log("Seeding database...");
 
     try {
-        // Step 2: Prepare cities for batch insert
+        // Prepare cities for batch insert
         const cityDataArray = Array.from(cities.entries()).map(
             ([geonameid, cityData]) => ({
                 id: geonameid,
@@ -241,15 +249,20 @@ async function seedDatabase(
             skipDuplicates: true,
         });
 
-        // Step 3: Prepare alternate names
-        const alternateNamesArray: { name: string; cityId: string }[] = [];
+        // Prepare alternate names
+        const alternateNamesArray: {
+            name: string;
+            locale?: string;
+            cityId: string;
+        }[] = [];
         for (const [geonameid, cityData] of cities) {
             const cityName = cityData.preferredName || cityData.defaultCityName;
             cityData.altNames
-                .filter((name) => name !== cityName)
+                .filter((altName) => altName.name !== cityName)
                 .forEach((altName) => {
                     alternateNamesArray.push({
-                        name: altName,
+                        name: altName.name,
+                        locale: altName.locale,
                         cityId: geonameid,
                     });
                 });
