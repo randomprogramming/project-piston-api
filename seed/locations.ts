@@ -28,6 +28,7 @@ interface CityData {
     }[];
     lat?: number;
     lng?: number;
+    language: string;
 }
 
 const EUROPEAN_COUNTRIES: Set<String> = new Set([
@@ -165,6 +166,7 @@ async function parseCitiesFile(): Promise<Map<string, CityData>> {
         const lat = parseFloat(parts[4]);
         const lng = parseFloat(parts[5]);
         const countryCode = parts[8];
+        const language = parts[15]?.split(",")[0] || "en";
 
         // We want only EU countries.. If for some reason in the future
         // we want all cities, just remove this line
@@ -178,6 +180,7 @@ async function parseCitiesFile(): Promise<Map<string, CityData>> {
             altNames: [],
             lat,
             lng,
+            language: language.toLowerCase(),
         });
     }
     return cities;
@@ -213,7 +216,8 @@ async function parseAlternateNames(
         const isPreferred = parts[4] === "1";
         const city = cities.get(geonameid)!;
 
-        if (isPreferred && !city.preferredName) {
+        // If there is no preffered name yet or the locale matches the language of the city(might override previous assignments)
+        if (isPreferred && (!city.preferredName || locale === city.language)) {
             city.preferredName = name;
         }
         city.altNames.push({

@@ -68,10 +68,7 @@ export default class Server {
             this.httpServer
         );
         this.bidService = new BidService(this.bidRepo, this.auctionRepo2);
-        this.auctionService = new AuctionService(
-            this.auctionRepo,
-            this.auctionRepo2
-        );
+        this.auctionService = new AuctionService(this.auctionRepo2);
     }
 
     private setupMiddleware() {
