@@ -27,6 +27,7 @@ export default class AuctionRepository2 {
         const [auctions, totalCount] = await Promise.all([
             this.prisma.auction.findMany({
                 select: {
+                    id: true,
                     prettyId: true,
                     endDate: true,
                     startDate: true,

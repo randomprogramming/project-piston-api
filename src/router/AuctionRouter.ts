@@ -73,6 +73,7 @@ export default class AuctionRouter extends BaseRouter {
         res.json({
             data: paginatedResponse.auctions.map((a) => {
                 return {
+                    id: a.id,
                     prettyId: a.prettyId,
                     state: a.state,
                     startDate: a.startDate,
