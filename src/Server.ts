@@ -17,7 +17,6 @@ import LocalImageStorageService from "./imagestorage/LocalImageStorage";
 import MediaRepository from "./repository/MediaRepository";
 import CloudinaryService from "./service/CloudinaryService";
 import http from "http";
-import AuctionWebSocketService from "./service/ws/AuctionWebSocketService";
 import BidRepository from "./repository/BidRepository";
 import BidService from "./service/BidService";
 import BidRouter from "./router/BidRouter";
@@ -25,6 +24,7 @@ import AuctionService from "./service/AuctionService";
 import AuctionRepository2 from "./repository/AuctionRepository2";
 import LocationRepository from "./repository/LocationRepository";
 import LocationRouter from "./router/LocationRouter";
+import WebSocketManager from "./service/ws/WebSocketManager";
 
 export default class Server {
     private app: Express;
@@ -41,7 +41,7 @@ export default class Server {
 
     private imageStorage: ImageStorage;
     private cloudinaryService: CloudinaryService;
-    private auctionWebSocketService: AuctionWebSocketService;
+    private websocketManager: WebSocketManager;
     private bidService: BidService;
     private auctionService: AuctionService;
 
@@ -64,9 +64,7 @@ export default class Server {
 
         this.imageStorage = new LocalImageStorageService("/images/auctions");
         this.cloudinaryService = new CloudinaryService();
-        this.auctionWebSocketService = new AuctionWebSocketService(
-            this.httpServer
-        );
+        this.websocketManager = new WebSocketManager(this.httpServer);
         this.bidService = new BidService(this.bidRepo, this.auctionRepo2);
         this.auctionService = new AuctionService(this.auctionRepo2);
     }
@@ -105,7 +103,7 @@ export default class Server {
                 this.imageStorage,
                 this.cloudinaryService
             ),
-            new BidRouter(this.bidService, this.auctionWebSocketService),
+            new BidRouter(this.bidService, this.websocketManager.auctionWS()),
             new LocationRouter(this.locationRepo),
         ];
 
