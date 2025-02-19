@@ -9,6 +9,7 @@ import {
     type Auction,
     ImageGroup,
 } from "@prisma/client";
+import { Err, Ok, type Result } from "../result";
 
 /**
  * This repo gives more control to the caller than the original auctionrepo, because the method names were getting stupidly long
@@ -32,7 +33,12 @@ export default class AuctionRepository2 {
                     endDate: true,
                     startDate: true,
                     state: true,
-                    carInformation: true,
+                    carInformation: {
+                        // TODO: Omit VIN everywhere...
+                        omit: {
+                            vin: true,
+                        },
+                    },
                     bids: {
                         orderBy: { amount: "desc" },
                         take: 1,
@@ -125,7 +131,11 @@ export default class AuctionRepository2 {
                 id,
             },
             include: {
-                carInformation: true,
+                carInformation: {
+                    omit: {
+                        vin: true,
+                    },
+                },
             },
         });
     };
@@ -203,5 +213,92 @@ export default class AuctionRepository2 {
                 SELECT * FROM "Auction" WHERE id = ${id} FOR NO KEY UPDATE
             `
         )[0];
+    };
+
+    /**
+     * Accept a submitted auction. Meaning, move it to "PENDING_CHANGES" but only if it was in the "SUBMITTED" state
+     */
+    public acceptSubmittedAndCreateCarModel = async (
+        id: string
+    ): Promise<Result<Auction, string>> => {
+        return this.prisma.$transaction(async (tx) => {
+            const auction = await tx.auction.findUnique({
+                where: { id, state: AuctionState.SUBMITTED },
+            });
+            if (!auction) {
+                return Err("auction_not_found");
+            }
+
+            const carInformation = await tx.auctionCarInformation.findUnique({
+                where: {
+                    id: auction.carInformationId,
+                },
+            });
+            if (!carInformation) {
+                return Err("carInformation_not_found");
+            }
+
+            let carBrand = await tx.carBrand.findUnique({
+                where: {
+                    name: carInformation.ueCarBrand,
+                },
+            });
+            if (!carBrand) {
+                carBrand = await tx.carBrand.create({
+                    data: {
+                        name: carInformation.ueCarBrand,
+                    },
+                });
+            }
+            if (!carBrand) {
+                return Err("carBrand_failed_create");
+            }
+
+            let carModel = await tx.carModel.findUnique({
+                where: {
+                    name_carBrandName: {
+                        carBrandName: carBrand.name,
+                        name: carInformation.ueCarModel,
+                    },
+                },
+            });
+            if (!carModel) {
+                carModel = await tx.carModel.create({
+                    data: {
+                        carBrandName: carBrand.name,
+                        name: carInformation.ueCarModel,
+                    },
+                });
+            }
+            if (!carModel) {
+                return Err("carModel_failed_create");
+            }
+
+            await tx.auctionCarInformation.update({
+                where: {
+                    id: auction.carInformationId,
+                },
+                data: {
+                    carModel: {
+                        connect: {
+                            name_carBrandName: {
+                                carBrandName: carBrand.name,
+                                name: carInformation.ueCarModel,
+                            },
+                        },
+                    },
+                },
+            });
+
+            const updatedAuction = await tx.auction.update({
+                data: {
+                    state: AuctionState.PENDING_CHANGES,
+                },
+                where: {
+                    id: auction.id,
+                },
+            });
+            return Ok(updatedAuction);
+        });
     };
 }

@@ -8,6 +8,7 @@ export default class AuctionWebSocketService extends WebSocketService {
     public static readonly NAMESPACE = "/auction";
 
     constructor(server: HttpServer) {
+        logger.info("Setting up AuctionWebSocketService...");
         super(server, AuctionWebSocketService.NAMESPACE);
     }
 

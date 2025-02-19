@@ -206,30 +206,18 @@ export default class AuctionRouter extends BaseRouter {
 
     public acceptSubbmittedAuction = async (req: Request, res: Response) => {
         const id = parseId(req.params);
+        const result = await this.auctionService.acceptSubbmittedAuction(id);
 
-        const auction = await this.auctionRepo.findById(id);
-
-        if (!auction) {
+        if (!result.ok) {
             return ResponseErrorMessageBuilder.auction()
-                .addDetail("not_found")
-                .log("acceptSubbmittedAuction", "Requested auction not found")
-                .send(res, HttpStatus.NotFound);
-        }
-
-        if (auction.state !== AuctionState.SUBMITTED) {
-            return ResponseErrorMessageBuilder.auction()
-                .addDetail("not_acceptable")
+                .addDetail(result.error)
                 .log(
                     "acceptSubbmittedAuction",
-                    `Unable to accept auction '${auction.id}' as it is not in the '${AuctionState.SUBMITTED}' state`
+                    `Failed to accept submitted auction because '${result.error}' for auction id: '${id}'`
                 )
                 .send(res);
         }
 
-        await this.auctionRepo.updateStateById(
-            id,
-            AuctionState.PENDING_CHANGES
-        );
         res.send();
     };
 

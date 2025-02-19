@@ -38,6 +38,14 @@ export default class AuctionRepository {
                 },
             });
 
+            // Fill in the auctionId in the AuctionCarInformation schema
+            await tx.auctionCarInformation.update({
+                where: { id: carInformationId },
+                data: {
+                    auctionId: auction.id,
+                },
+            });
+
             return auction;
         });
     };

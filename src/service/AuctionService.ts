@@ -13,7 +13,7 @@ import { sanitizeURLString } from "../util/url";
 export default class AuctionService {
     constructor(private auctionRepo: AuctionRepository2) {}
 
-    private generatePrettyId = (info: AuctionCarInformation) => {
+    private generatePrettyId = (info: Omit<AuctionCarInformation, "vin">) => {
         const nameArr: string[] = [];
         nameArr.push(info.modelYear.toString());
         // TODO: Right now we are using user-entry brand and model because we don't have the system in place to
@@ -109,5 +109,14 @@ export default class AuctionService {
                 },
             }
         );
+    };
+
+    /**
+     * Accept a submitted auction. Meaning, move it to "PENDING_CHANGES" but only if it was in the "SUBMITTED" state
+     * Also update the car brand and car model fields in the AuctionCarInformation
+     * This will create the car model or car brand rows in the db if they don't already exist for that model/brand
+     */
+    public acceptSubbmittedAuction = async (id: string) => {
+        return this.auctionRepo.acceptSubmittedAndCreateCarModel(id);
     };
 }
