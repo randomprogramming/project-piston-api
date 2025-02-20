@@ -38,8 +38,7 @@ export default class CommentRepository {
         `;
 
         // bigint can't be serialzed?
-        const total = Number(totalCountResult[0]?.count || 0);
-        console.log(typeof total);
+        const count = Number(totalCountResult[0]?.count || 0);
 
         const data = await this.prisma.$queryRaw`
             SELECT 
@@ -80,7 +79,7 @@ export default class CommentRepository {
         `;
 
         return {
-            total,
+            count,
             data,
         };
     };

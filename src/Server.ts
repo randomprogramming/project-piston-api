@@ -109,7 +109,10 @@ export default class Server {
             ),
             new BidRouter(this.bidService, this.websocketManager.auctionWS()),
             new LocationRouter(this.locationRepo),
-            new CommentRouter(this.commentRepo),
+            new CommentRouter(
+                this.commentRepo,
+                this.websocketManager.auctionWS()
+            ),
         ];
 
         for (const router of ALL_ROUTERS) {
