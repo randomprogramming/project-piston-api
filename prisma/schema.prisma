@@ -29,6 +29,7 @@ model Account {
   /// We need to create the account and then prompt the user for a username
   // TODO: should be unique by case insensitive. We can do this by creating a manual migration
   // file and create a index on the lower(username) col.
+  // TODO: There are a lot of endpoints which the user shouldnt be able to access unless they actually HAVE a username
   username String?      @unique
   email    String       @unique
   provider AuthProvider
@@ -38,6 +39,7 @@ model Account {
 
   auctions Auction[]
   bids     Bid[]
+  comments Comment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -155,6 +157,7 @@ model Auction {
   contactDetailsId String                @unique
   media            Media[]
   bids             Bid[]
+  comments         Comment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -225,5 +228,19 @@ model AlternateName {
   city   City   @relation(fields: [cityId], references: [id], onDelete: Cascade)
   cityId String
 
+  updatedAt DateTime @updatedAt
+}
+
+model Comment {
+  id String @id @default(uuid())
+
+  content String @db.Text()
+
+  account   Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId String
+  auction   Auction @relation(fields: [auctionId], references: [id], onDelete: Cascade)
+  auctionId String
+
+  createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
