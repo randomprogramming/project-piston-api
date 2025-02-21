@@ -27,6 +27,8 @@ import LocationRouter from "./router/LocationRouter";
 import WebSocketManager from "./service/ws/WebSocketManager";
 import CommentRepository from "./repository/CommentRepository";
 import CommentRouter from "./router/CommentRouter";
+import BrandRepository from "./repository/BrandRepository";
+import BrandRouter from "./router/BrandRouter";
 
 export default class Server {
     private app: Express;
@@ -41,6 +43,7 @@ export default class Server {
     private bidRepo: BidRepository;
     private locationRepo: LocationRepository;
     private commentRepo: CommentRepository;
+    private brandRepo: BrandRepository;
 
     private imageStorage: ImageStorage;
     private cloudinaryService: CloudinaryService;
@@ -65,6 +68,7 @@ export default class Server {
         this.bidRepo = new BidRepository(this.prismaClient);
         this.locationRepo = new LocationRepository(this.prismaClient);
         this.commentRepo = new CommentRepository(this.prismaClient);
+        this.brandRepo = new BrandRepository(this.prismaClient);
 
         this.imageStorage = new LocalImageStorageService("/images/auctions");
         this.cloudinaryService = new CloudinaryService();
@@ -113,6 +117,7 @@ export default class Server {
                 this.commentRepo,
                 this.websocketManager.auctionWS()
             ),
+            new BrandRouter(this.brandRepo),
         ];
 
         for (const router of ALL_ROUTERS) {

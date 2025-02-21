@@ -279,7 +279,7 @@ async function seedDatabase(
             });
         }
 
-        console.log("Database seeding completed successfully.");
+        console.log("City data seeding completed.");
     } catch (error: any) {
         console.error("Error during database seeding:", error.message || error);
     }
