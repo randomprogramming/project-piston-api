@@ -163,6 +163,9 @@ export default class AuctionRepository2 {
                     include: {
                         city: true,
                     },
+                    omit: {
+                        vin: true,
+                    },
                 },
                 _count: {
                     select: {
