@@ -1,4 +1,5 @@
 import type AuctionRepository2 from "../repository/AuctionRepository2";
+import type { PaginatedAuctionQueryDto } from "../dto/auction";
 import {
     AuctionState,
     ImageGroup,
@@ -9,6 +10,7 @@ import logger from "../logger";
 import { hashDate } from "../util/date";
 import ResponseErrorMessageBuilder from "../router/response/ResponseErrorMessageBuilder";
 import { sanitizeURLString } from "../util/url";
+import { FEATURED_AUCTIONS_COUNT } from "../env";
 
 export default class AuctionService {
     constructor(private auctionRepo: AuctionRepository2) {}
@@ -58,6 +60,9 @@ export default class AuctionService {
             );
         }
 
+        const liveFeaturedAuctionCount =
+            await this.auctionRepo.countLiveFeaturedAuctions();
+
         const prettyId = this.generatePrettyId(auction.carInformation);
         const startDate = new Date();
         const endDate = new Date();
@@ -67,6 +72,8 @@ export default class AuctionService {
             prettyId,
             startDate,
             endDate,
+            // If we don't have enough featured auctions live right now, by default make this new one featured
+            featured: liveFeaturedAuctionCount < FEATURED_AUCTIONS_COUNT,
         });
         logger.info(
             `Auction '${auction.id}' is live with prettyId '${prettyId}'`
@@ -85,8 +92,8 @@ export default class AuctionService {
         return this.auctionRepo.getFull({ id });
     };
 
-    public getAuctionsPaginated = async () => {
-        return this.auctionRepo.findManyBasicPaginated();
+    public getAuctionsPaginated = async (q: PaginatedAuctionQueryDto) => {
+        return this.auctionRepo.findManyBasicPaginated(q);
     };
 
     public getAuctionsOfSeller = async (sellerId: string) => {

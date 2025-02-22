@@ -148,6 +148,7 @@ model Auction {
   state     AuctionState
   startDate DateTime?
   endDate   DateTime?
+  featured  Boolean      @default(false)
 
   carInformation   AuctionCarInformation @relation(fields: [carInformationId], references: [id])
   carInformationId String                @unique

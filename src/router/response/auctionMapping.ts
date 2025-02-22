@@ -5,8 +5,10 @@ import type {
     Media,
 } from "@prisma/client";
 
+type AuctionCarInformationNoVin = Omit<AuctionCarInformation, "vin">;
+
 interface AuctionWithCarInformationAndMediaAndSeller extends Auction {
-    carInformation: AuctionCarInformation & { city: City };
+    carInformation: AuctionCarInformationNoVin & { city: City };
     media: Media[];
     seller: {
         username: string | null;

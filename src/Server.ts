@@ -4,7 +4,7 @@ import express, { type Express, type Request } from "express";
 import cors from "cors";
 import morgan from "morgan";
 import { PrismaClient } from "@prisma/client";
-import { Environment, NODE_ENV, PORT } from "./env";
+import { NODE_ENV, PORT } from "./env";
 import logger from "./logger";
 import PingRouter from "./router/PingRouter";
 import { initAuthMiddleware } from "./util/auth";
@@ -126,10 +126,9 @@ export default class Server {
             );
             this.app.use(router.getPath(), router.getRouter());
         }
-        if (NODE_ENV === Environment.development) {
-            logger.warn("Exposing static files from ./public folder");
-            this.app.use("/", express.static("./public"));
-        }
+        // TODO: Remove this, and use cloudinary for everything
+        logger.warn("Exposing static files from ./public folder");
+        this.app.use("/", express.static("./public"));
     }
 
     private setUpErrorHandling() {

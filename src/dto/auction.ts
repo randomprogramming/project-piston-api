@@ -37,6 +37,21 @@ export function parseAuctionDto(obj: any) {
 }
 export type AuctionDto = z.infer<typeof AuctionSchema>;
 
+const PaginatedAuctionQuerySchema = z.object({
+    featured: z
+        .string()
+        .optional()
+        .transform((value) =>
+            value === undefined ? undefined : value.toLowerCase() === "true"
+        ),
+});
+export function parsePaginatedAuctionQuery(obj: any) {
+    return PaginatedAuctionQuerySchema.parse(obj);
+}
+export type PaginatedAuctionQueryDto = z.infer<
+    typeof PaginatedAuctionQuerySchema
+>;
+
 // const PatchableCarInformationSchema = z.object({
 //     vin: z.optional(z.string()),
 //     modelYear: z.optional(modelYear()),

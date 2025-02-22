@@ -80,3 +80,7 @@ export const CLOUDINARY_CLOUD_NAME = parseEnvString(
     "CLOUDINARY_CLOUD_NAME",
     true
 );
+export const FEATURED_AUCTIONS_COUNT = parseEnvInt(
+    "FEATURED_AUCTIONS_COUNT",
+    true
+);

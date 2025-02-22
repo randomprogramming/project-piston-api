@@ -19,11 +19,38 @@ import { Err, Ok, type Result } from "../result";
 export default class AuctionRepository2 {
     constructor(private prisma: PrismaClient) {}
 
-    public async findManyBasicPaginated() {
+    /**
+     * This method by defaults includes only LIVE auctions where the endDate has not been reached yet, i.e. auctions which can be bid on
+     */
+    public async findManyBasicPaginated(whereParam?: Prisma.AuctionWhereInput) {
         // TODO: In the filters include a "ended", "not_started" fields, based on which we will include LIVE auctions which have either not yet started or already ended
         const where: Prisma.AuctionWhereInput = {
             state: AuctionState.LIVE,
+            endDate: {
+                gt: new Date(),
+            },
+            ...whereParam,
         };
+
+        let media: Prisma.MediaFindManyArgs = {};
+        if (whereParam?.featured) {
+            // For featured auctions, we have a couple of extra images to show, so we need to adapt the query
+            media = {
+                where: {
+                    group: {
+                        in: [ImageGroup.EXTERIOR, ImageGroup.INTERIOR],
+                    },
+                },
+                orderBy: { order: "asc" },
+                take: 8,
+            };
+        } else {
+            media = {
+                where: { group: ImageGroup.EXTERIOR },
+                orderBy: { order: "asc" },
+                take: 1,
+            };
+        }
 
         const [auctions, totalCount] = await Promise.all([
             this.prisma.auction.findMany({
@@ -42,13 +69,16 @@ export default class AuctionRepository2 {
                     bids: {
                         orderBy: { amount: "desc" },
                         take: 1,
-                        select: { amount: true },
+                        select: {
+                            amount: true,
+                            bidder: {
+                                select: {
+                                    username: true,
+                                },
+                            },
+                        },
                     },
-                    media: {
-                        where: { group: ImageGroup.EXTERIOR },
-                        orderBy: { order: "asc" },
-                        take: 1,
-                    },
+                    media,
                 },
                 where,
                 take: 24,
@@ -142,7 +172,12 @@ export default class AuctionRepository2 {
 
     public auctionGoLive = async (
         id: string,
-        data: { prettyId: string; startDate: Date; endDate: Date }
+        data: {
+            prettyId: string;
+            startDate: Date;
+            endDate: Date;
+            featured: boolean;
+        }
     ) => {
         return this.prisma.auction.update({
             data: {
@@ -302,6 +337,18 @@ export default class AuctionRepository2 {
                 },
             });
             return Ok(updatedAuction);
+        });
+    };
+
+    public countLiveFeaturedAuctions = async () => {
+        return this.prisma.auction.count({
+            where: {
+                featured: true,
+                state: AuctionState.LIVE,
+                endDate: {
+                    gt: new Date(),
+                },
+            },
         });
     };
 }

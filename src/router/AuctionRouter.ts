@@ -6,7 +6,7 @@ import type CloudinaryService from "../service/CloudinaryService";
 import type AuctionService from "../service/AuctionService";
 import BaseRouter, { API_VERSION } from "./BaseRouter";
 import { auth, hasAdminRole } from "../util/auth/middleware";
-import { parseAuctionDto } from "../dto/auction";
+import { parseAuctionDto, parsePaginatedAuctionQuery } from "../dto/auction";
 import HttpStatus from "../HttpStatus";
 import { imageUpload } from "../middleware/file";
 import { AUCTION_IMAGE_HOST } from "../env";
@@ -67,8 +67,9 @@ export default class AuctionRouter extends BaseRouter {
     }
 
     public getAuctionsPaginated = async (req: Request, res: Response) => {
+        const query = parsePaginatedAuctionQuery(req.query);
         const paginatedResponse =
-            await this.auctionService.getAuctionsPaginated();
+            await this.auctionService.getAuctionsPaginated(query);
 
         res.json({
             data: paginatedResponse.auctions.map((a) => {
@@ -91,6 +92,7 @@ export default class AuctionRouter extends BaseRouter {
                             ? { amount: a.bids[0].amount }
                             : undefined,
                     coverPhoto: a.media.length > 0 ? a.media[0].url : undefined,
+                    media: a.media,
                 };
             }),
             count: paginatedResponse.totalCount,
