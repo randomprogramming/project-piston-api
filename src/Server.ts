@@ -83,6 +83,7 @@ export default class Server {
         });
         this.app.use(
             morgan("[:userId] :method :url :status - :response-time \bms", {
+                skip: (req) => req.method === "OPTIONS",
                 stream: {
                     write: (msg) => {
                         // Use winston for logging
