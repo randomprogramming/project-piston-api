@@ -1,5 +1,7 @@
 import type AuctionRepository2 from "../repository/AuctionRepository2";
 import type { PaginatedAuctionQueryDto } from "../dto/auction";
+import type { MediaUploadDto } from "../dto/media";
+import type MediaRepository from "../repository/MediaRepository";
 import {
     AuctionState,
     ImageGroup,
@@ -13,7 +15,10 @@ import { sanitizeURLString } from "../util/url";
 import { FEATURED_AUCTIONS_COUNT } from "../env";
 
 export default class AuctionService {
-    constructor(private auctionRepo: AuctionRepository2) {}
+    constructor(
+        private auctionRepo: AuctionRepository2,
+        private mediaRepo: MediaRepository
+    ) {}
 
     private generatePrettyId = (info: Omit<AuctionCarInformation, "vin">) => {
         const nameArr: string[] = [];
@@ -125,5 +130,42 @@ export default class AuctionService {
      */
     public acceptSubbmittedAuction = async (id: string) => {
         return this.auctionRepo.acceptSubmittedAndCreateCarModel(id);
+    };
+
+    public addMedia = async (
+        id: string,
+        sellerId: string,
+        mediaUploadDto: MediaUploadDto
+    ): Promise<Result<undefined, string>> => {
+        const auction = await this.auctionRepo.findAuctionForUploadingMedia(
+            id,
+            sellerId
+        );
+        if (!auction) {
+            return Err("not_found");
+        }
+        // Submitted auctions may only have 1 photo in the beggining, and then we later ask for more photos
+        if (
+            auction.state === AuctionState.SUBMITTED &&
+            auction._count.media > 0
+        ) {
+            return Err("submitted_auction_already_has_media");
+        }
+        // TODO: Make this 200 a env variable
+        if (auction._count.media + mediaUploadDto.media.length > 200) {
+            return Err("too_many_photos");
+        }
+
+        const existingMediaCount = await this.mediaRepo.countForAuctionAndGroup(
+            auction.id,
+            mediaUploadDto.group
+        );
+        await this.mediaRepo.createManyForAuction(
+            id,
+            mediaUploadDto.group,
+            mediaUploadDto.media,
+            existingMediaCount
+        );
+        return Ok();
     };
 }

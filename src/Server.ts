@@ -54,12 +54,7 @@ export default class Server {
     constructor() {
         this.app = express();
         this.httpServer = http.createServer(this.app);
-        this.prismaClient = new PrismaClient({
-            transactionOptions: {
-                timeout: 20000,
-                maxWait: 20000,
-            },
-        });
+        this.prismaClient = new PrismaClient();
 
         this.accountRepo = new AccountRepository(this.prismaClient);
         this.auctionRepo = new AuctionRepository(this.prismaClient);
@@ -74,7 +69,10 @@ export default class Server {
         this.cloudinaryService = new CloudinaryService();
         this.websocketManager = new WebSocketManager(this.httpServer);
         this.bidService = new BidService(this.bidRepo, this.auctionRepo2);
-        this.auctionService = new AuctionService(this.auctionRepo2);
+        this.auctionService = new AuctionService(
+            this.auctionRepo2,
+            this.mediaRepo
+        );
     }
 
     private setupMiddleware() {
@@ -107,8 +105,6 @@ export default class Server {
             new AuctionRouter(
                 this.auctionService,
                 this.auctionRepo,
-                this.mediaRepo,
-                this.imageStorage,
                 this.cloudinaryService
             ),
             new BidRouter(this.bidService, this.websocketManager.auctionWS()),
@@ -127,6 +123,7 @@ export default class Server {
             this.app.use(router.getPath(), router.getRouter());
         }
         // TODO: Remove this, and use cloudinary for everything
+        // TODO: Actually I changed my mind, use a env variable to control wether we want ALL uploads to go to cloudinary or to the server
         logger.warn("Exposing static files from ./public folder");
         this.app.use("/", express.static("./public"));
     }

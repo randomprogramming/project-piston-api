@@ -351,4 +351,29 @@ export default class AuctionRepository2 {
             },
         });
     };
+
+    /**
+     * Accept media uploads only for auctions which are in PENDING_CHANGES or SUBMITTED state
+     */
+    public findAuctionForUploadingMedia = async (
+        id: string,
+        sellerId: string
+    ) => {
+        return this.prisma.auction.findFirst({
+            where: {
+                id,
+                sellerId,
+                state: {
+                    in: [AuctionState.PENDING_CHANGES, AuctionState.SUBMITTED],
+                },
+            },
+            include: {
+                _count: {
+                    select: {
+                        media: true,
+                    },
+                },
+            },
+        });
+    };
 }

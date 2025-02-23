@@ -1,19 +1,14 @@
 import type { Request, Response } from "express";
 import type AuctionRepository from "../repository/AuctionRepository";
-import type MediaRepository from "../repository/MediaRepository";
-import type { ImageStorage } from "../imagestorage/ImageStorage";
 import type CloudinaryService from "../service/CloudinaryService";
 import type AuctionService from "../service/AuctionService";
 import BaseRouter, { API_VERSION } from "./BaseRouter";
 import { auth, hasAdminRole } from "../util/auth/middleware";
 import { parseAuctionDto, parsePaginatedAuctionQuery } from "../dto/auction";
 import HttpStatus from "../HttpStatus";
-import { imageUpload } from "../middleware/file";
-import { AUCTION_IMAGE_HOST } from "../env";
 import ResponseErrorMessageBuilder from "./response/ResponseErrorMessageBuilder";
-import path from "path";
 import { parseId, parsePrettyId } from "../dto/common";
-import { AuctionState, ImageGroup, Role } from "@prisma/client";
+import { AuctionState, Role } from "@prisma/client";
 import { parseMediaUploadDto } from "../dto/media";
 import { mapAuction } from "./response/auctionMapping";
 
@@ -22,18 +17,11 @@ export default class AuctionRouter extends BaseRouter {
         private auctionService: AuctionService,
         // TODO: should not be using the repo directly...
         private auctionRepo: AuctionRepository,
-        private mediaRepo: MediaRepository,
-        private imageStorage: ImageStorage,
         private cloudinaryService: CloudinaryService
     ) {
         super(API_VERSION.V1, "/auctions");
 
-        this.router.post(
-            "/",
-            auth(),
-            imageUpload.single("image"),
-            this.submitAuction
-        );
+        this.router.post("/", auth(), this.submitAuction);
         this.router.get("/", this.getAuctionsPaginated);
         this.router.post(
             "/media/authenticate",
@@ -100,33 +88,13 @@ export default class AuctionRouter extends BaseRouter {
     };
 
     public submitAuction = async (req: Request, res: Response) => {
-        // When using file upload middleware, the body JSON arrives serialized
-        const auctionDto = parseAuctionDto(JSON.parse(req.body.auction));
-        if (!req.file) {
-            return ResponseErrorMessageBuilder.auction()
-                .addDetail("image", "missing")
-                .send(res);
-        }
+        const auctionDto = parseAuctionDto(req.body);
 
         const { id } = await this.auctionRepo.createWithStateSubmitted(
             req.user!.id,
             auctionDto.carInformation,
             auctionDto.contactDetails
         );
-        const imagePath = await this.imageStorage.saveImage(
-            id,
-            "cover" + path.extname(req.file.originalname),
-            req.file.buffer
-        );
-        // Remove the trailing slash from host and leading slash from path, and ensure exactly one slash
-        const imageUrl =
-            AUCTION_IMAGE_HOST.href.replace(/\/$/, "") +
-            "/" +
-            imagePath.replace(/^\//, "");
-        await this.mediaRepo.createForAuction(id, ImageGroup.EXTERIOR, {
-            url: imageUrl,
-            order: 0,
-        });
 
         res.status(HttpStatus.Created).send(id);
     };
@@ -227,25 +195,26 @@ export default class AuctionRouter extends BaseRouter {
         const id = parseId(req.params);
         const data = parseMediaUploadDto(req.body);
 
-        // May upload photos only when auction is in PENDING_CHANGES state
-        const auction = await this.auctionRepo.findByIdAndSellerIdAndState(
+        const response = await this.auctionService.addMedia(
             id,
             req.user!.id,
-            AuctionState.PENDING_CHANGES
+            data
         );
-        if (!auction) {
+        if (!response.ok) {
             return ResponseErrorMessageBuilder.auction()
-                .addDetail("not_found")
-                .send(res, HttpStatus.NotFound);
+                .addDetail(response.error)
+                .log(
+                    "addAuctionMedia",
+                    `Error when uploading auction media: '${response.error}'. Auction ID: '${id}'`
+                )
+                .send(res);
         }
-        // TODO: We need to do validation to make sure that the order is correct
-        // Newly added pictures may only be added to the end, and then the user may re-order them
-        await this.mediaRepo.createManyForAuction(id, data.group, data.media);
+
         res.send();
     };
 
     public authenticateCloudinary = async (_req: Request, res: Response) => {
-        // TODO: Check auction is in state PENDING_CHANGES and has less than 200 images
+        // TODO: Check auction is in state PENDING_CHANGES and has less than 200 images, there is aa method in auctionservice for chjecking this.
         const resp = this.cloudinaryService.authenticateCloudinary();
 
         res.json(resp);
