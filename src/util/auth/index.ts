@@ -1,7 +1,6 @@
 import type AccountRepository from "../../repository/AccountRepository";
 import passport from "passport";
 import { buildGoogleStrategy, buildJwtStrategy } from "./strategy";
-import bcrypt from "bcrypt";
 
 export function initAuthMiddleware(accountRepo: AccountRepository) {
     passport.use(buildJwtStrategy());
@@ -10,9 +9,12 @@ export function initAuthMiddleware(accountRepo: AccountRepository) {
 }
 
 export async function hashPass(val: string) {
-    return await bcrypt.hash(val, 15);
+    return Bun.password.hash(val, {
+        algorithm: "bcrypt",
+        cost: 14,
+    });
 }
 
-export async function compareHashedPass(rawPass: string, hashedPass: string) {
-    return await bcrypt.compare(rawPass, hashedPass);
+export async function compareHashedPass(password: string, hash: string) {
+    return Bun.password.verify(password, hash);
 }
