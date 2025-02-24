@@ -10,7 +10,7 @@ import ResponseErrorMessageBuilder from "./response/ResponseErrorMessageBuilder"
 import { parseId, parsePrettyId } from "../dto/common";
 import { AuctionState, Role } from "@prisma/client";
 import { parseMediaUploadDto } from "../dto/media";
-import { mapAuction } from "./response/auctionMapping";
+import { mapAuction, mapBasicAuctions } from "./response/auctionMapping";
 
 export default class AuctionRouter extends BaseRouter {
     constructor(
@@ -60,29 +60,7 @@ export default class AuctionRouter extends BaseRouter {
             await this.auctionService.getAuctionsPaginated(query);
 
         res.json({
-            data: paginatedResponse.auctions.map((a) => {
-                return {
-                    id: a.id,
-                    prettyId: a.prettyId,
-                    state: a.state,
-                    startDate: a.startDate,
-                    endDate: a.endDate,
-                    carInformation: {
-                        ueCarBrand: a.carInformation.ueCarBrand,
-                        ueCarModel: a.carInformation.ueCarModel,
-                        modelYear: a.carInformation.modelYear,
-                        trim: a.carInformation.trim,
-                        carModelName: a.carInformation.carModelName,
-                        carBrandName: a.carInformation.carBrandName,
-                    },
-                    currentBid:
-                        a.bids.length > 0
-                            ? { amount: a.bids[0].amount }
-                            : undefined,
-                    coverPhoto: a.media.length > 0 ? a.media[0].url : undefined,
-                    media: a.media,
-                };
-            }),
+            data: mapBasicAuctions(paginatedResponse.auctions),
             count: paginatedResponse.totalCount,
         });
     };

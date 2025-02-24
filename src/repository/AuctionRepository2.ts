@@ -65,6 +65,9 @@ export default class AuctionRepository2 {
                         omit: {
                             vin: true,
                         },
+                        include: {
+                            city: true,
+                        },
                     },
                     bids: {
                         orderBy: { amount: "desc" },
@@ -205,6 +208,7 @@ export default class AuctionRepository2 {
                 _count: {
                     select: {
                         bids: true,
+                        comments: true,
                     },
                 },
                 media: {
