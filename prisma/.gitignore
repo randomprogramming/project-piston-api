@@ -1,3 +1,0 @@
-# While in early development, we dont want to include migrations because they will include a lot of changes
-# TODO: Remove this file when we reach first release version
-migrations
