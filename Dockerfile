@@ -3,18 +3,14 @@ FROM oven/bun
 WORKDIR /var/www/api
 
 COPY package*.json bun.lockb ./
-
-RUN bun install
+RUN bun install --frozen-lockfile
 
 COPY . .
 
-ENV NODE_ENV production
-
-RUN bun prisma:generate
-RUN bun prisma:migrate:deploy
-RUN bun prisma:seed
-
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
 
 EXPOSE 8080
 
-CMD [ "bun", "start" ]
+RUN chmod +x start.sh
+CMD ["./start.sh"]
