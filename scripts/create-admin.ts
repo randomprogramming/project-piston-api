@@ -19,13 +19,14 @@ async function main() {
         process.exit(1);
     }
 
-    const confirmation = await prompt(
-        `Are you sure you want to make '${email1}' an admin? (yes/no)[y/n]: `
-    );
-    if (
-        confirmation.toLowerCase() !== "yes" ||
-        confirmation.toLowerCase() !== "y"
-    ) {
+    const confirmation = (
+        await prompt(
+            `Are you sure you want to make '${email1}' an admin? (yes/no)[y/n]: `
+        )
+    )
+        .trim()
+        .toLowerCase();
+    if (confirmation !== "yes" && confirmation !== "y") {
         console.log("Operation cancelled.");
         process.exit(0);
     }
