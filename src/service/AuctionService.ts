@@ -1,5 +1,9 @@
 import type AuctionRepository2 from "../repository/AuctionRepository2";
-import type { AuctionDto, PaginatedAuctionQueryDto } from "../dto/auction";
+import type {
+    AuctionDto,
+    AuctionPatchData,
+    PaginatedAuctionQueryDto,
+} from "../dto/auction";
 import type { MediaUploadDto } from "../dto/media";
 import type MediaRepository from "../repository/MediaRepository";
 import {
@@ -71,6 +75,50 @@ export default class AuctionService {
         );
 
         return Ok(auction);
+    };
+
+    public editAuction = async (
+        id: string,
+        accountId: string,
+        patchableAuctionDto: AuctionPatchData,
+        hasAccess?: boolean
+    ) => {
+        const auction = await this.auctionRepo.findById(id);
+
+        // The function caller can determine if the user has access to it
+        // (for instance, an admin should be able to edit any auction at any point)
+        if (!hasAccess && auction?.sellerId === accountId) {
+            // Otherwise, check business logic if the requestor may do editing
+            // If the auction belongs to this user, they can edit it only in specific stages
+            if (
+                auction.state === AuctionState.SUBMITTED ||
+                auction.state === AuctionState.PENDING_CHANGES
+            ) {
+                hasAccess = true;
+            }
+        }
+
+        if (!hasAccess) {
+            return Err(
+                ResponseErrorMessageBuilder.auction()
+                    .addDetail("not_found")
+                    .log(
+                        `Account '${accountId}' doesn't have access to edit '${auction?.id}'.`,
+                        "editAuction"
+                    )
+                    .getMessage()
+            );
+        }
+
+        const updatedAuction = await this.auctionRepo.updateAuction(id, {
+            contactDetails: {
+                update: patchableAuctionDto.contactDetails,
+            },
+            carInformation: {
+                update: patchableAuctionDto.carInformation,
+            },
+        });
+        return Ok(updatedAuction);
     };
 
     public auctionGoLive = async (

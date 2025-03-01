@@ -52,11 +52,11 @@ export type PaginatedAuctionQueryDto = z.infer<
     typeof PaginatedAuctionQuerySchema
 >;
 
-const PatchableAuctionSchema = z.object({
+const AuctionPatchDataSchema = z.object({
     carInformation: z.lazy(() => AuctionCarInformationSchema.partial()),
     contactDetails: z.lazy(() => AuctionContactDetailsSchema.partial()),
 });
 export function parseAuctionPatchData(obj: any) {
-    return PatchableAuctionSchema.parse(obj);
+    return AuctionPatchDataSchema.parse(obj);
 }
-export type AuctionPatchData = z.infer<typeof PatchableAuctionSchema>;
+export type AuctionPatchData = z.infer<typeof AuctionPatchDataSchema>;

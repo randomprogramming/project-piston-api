@@ -4,7 +4,11 @@ import type CloudinaryService from "../service/CloudinaryService";
 import type AuctionService from "../service/AuctionService";
 import BaseRouter, { API_VERSION } from "./BaseRouter";
 import { auth, hasAdminRole } from "../util/auth/middleware";
-import { parseAuctionDto, parsePaginatedAuctionQuery } from "../dto/auction";
+import {
+    parseAuctionDto,
+    parseAuctionPatchData,
+    parsePaginatedAuctionQuery,
+} from "../dto/auction";
 import HttpStatus from "../HttpStatus";
 import ResponseErrorMessageBuilder from "./response/ResponseErrorMessageBuilder";
 import { parseId, parsePrettyId } from "../dto/common";
@@ -22,6 +26,7 @@ export default class AuctionRouter extends BaseRouter {
         super(API_VERSION.V1, "/auctions");
 
         this.router.post("/", auth(), this.submitAuction);
+        this.router.put("/id/:id", auth(), this.editAuction);
         this.router.get("/", this.getAuctionsPaginated);
         this.router.post(
             "/media/authenticate",
@@ -53,6 +58,19 @@ export default class AuctionRouter extends BaseRouter {
             this.auctionGoLive
         );
     }
+
+    public editAuction = async (req: Request, res: Response) => {
+        const auctionId = parseId(req.params);
+        const patchableAuctionDto = parseAuctionPatchData(req.body);
+
+        const updatedAuction = await this.auctionService.editAuction(
+            auctionId,
+            req.user!.id,
+            patchableAuctionDto,
+            req.user!.role === Role.ADMIN
+        );
+        res.status(200).json({ success: true, data: updatedAuction });
+    };
 
     public getAuctionsPaginated = async (req: Request, res: Response) => {
         const query = parsePaginatedAuctionQuery(req.query);
