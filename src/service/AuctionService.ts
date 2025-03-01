@@ -1,10 +1,10 @@
 import type AuctionRepository2 from "../repository/AuctionRepository2";
-import type { PaginatedAuctionQueryDto } from "../dto/auction";
+import type { AuctionDto, PaginatedAuctionQueryDto } from "../dto/auction";
 import type { MediaUploadDto } from "../dto/media";
 import type MediaRepository from "../repository/MediaRepository";
 import {
     AuctionState,
-    ImageGroup,
+    ContactType,
     type AuctionCarInformation,
 } from "@prisma/client";
 import { Err, Ok, type Result } from "../result";
@@ -36,6 +36,37 @@ export default class AuctionService {
         const str = nameArr.join("-");
         const sanitized = sanitizeURLString(str);
         return sanitized.toLowerCase();
+    };
+
+    public submitAuction = async (dto: AuctionDto, sellerId: string) => {
+        if (
+            dto.contactDetails.type === ContactType.DEALER &&
+            (dto.contactDetails.dealerName ?? "").length === 0
+        ) {
+            return Err(
+                ResponseErrorMessageBuilder.auction()
+                    .addDetail("dealerName", "missing")
+                    .log(
+                        "contactDetails is DEALER, but dealerName isn't supplied."
+                    )
+                    .getMessage()
+            );
+        } else if ((dto.contactDetails.name ?? "").length === 0) {
+            return Err(
+                ResponseErrorMessageBuilder.auction()
+                    .addDetail("name", "missing")
+                    .log("contactDetails is PRIVATE, but nane isn't supplied.")
+                    .getMessage()
+            );
+        }
+
+        const auction = await this.auctionRepo.submit(
+            sellerId,
+            dto.carInformation,
+            dto.contactDetails
+        );
+
+        return Ok(auction);
     };
 
     public auctionGoLive = async (

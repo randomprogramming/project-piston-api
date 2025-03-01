@@ -68,13 +68,16 @@ export default class AuctionRouter extends BaseRouter {
     public submitAuction = async (req: Request, res: Response) => {
         const auctionDto = parseAuctionDto(req.body);
 
-        const { id } = await this.auctionRepo.createWithStateSubmitted(
-            req.user!.id,
-            auctionDto.carInformation,
-            auctionDto.contactDetails
+        const response = await this.auctionService.submitAuction(
+            auctionDto,
+            req.user!.id
         );
+        if (!response.ok) {
+            res.status(HttpStatus.BadRequest).send(response.error);
+            return;
+        }
 
-        res.status(HttpStatus.Created).send(id);
+        res.status(HttpStatus.Created).send(response.value.id);
     };
 
     public getAuctionsBySellerId = async (req: Request, res: Response) => {

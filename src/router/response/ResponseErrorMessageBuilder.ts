@@ -42,6 +42,7 @@ export default class ResponseErrorMessageBuilder {
         return this;
     }
 
+    // TODO: Split this into two functions, one which takes just msg and one which takes step and msg
     public log(step?: string, msg?: string) {
         let logMsg = "ResponseErrorMessageBuilder::" + this.getMessage();
         if (step) {

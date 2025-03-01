@@ -17,37 +17,12 @@ export type AuctionCarInformationDto = z.infer<
     typeof AuctionCarInformationSchema
 >;
 
-const AuctionContactDetailsSchema = z
-    .object({
-        name: nullableString(),
-        dealerName: nullableString(),
-        type: z.nativeEnum(ContactType),
-        phone: z.string(),
-    })
-    .refine(
-        (data) => {
-            if (data.type === ContactType.PRIVATE) {
-                return !!data.name;
-            }
-            return true;
-        },
-        {
-            message: "error.name_required",
-            path: ["name"],
-        }
-    )
-    .refine(
-        (data) => {
-            if (data.type === ContactType.DEALER) {
-                return !!data.dealerName;
-            }
-            return true;
-        },
-        {
-            message: "error.dealer_name_required",
-            path: ["dealerName"],
-        }
-    );
+const AuctionContactDetailsSchema = z.object({
+    name: nullableString(),
+    dealerName: nullableString(),
+    type: z.nativeEnum(ContactType),
+    phone: z.string(),
+});
 export type AuctionContactDetailsDto = z.infer<
     typeof AuctionContactDetailsSchema
 >;
@@ -77,20 +52,11 @@ export type PaginatedAuctionQueryDto = z.infer<
     typeof PaginatedAuctionQuerySchema
 >;
 
-// const PatchableCarInformationSchema = z.object({
-//     vin: z.optional(z.string()),
-//     modelYear: z.optional(modelYear()),
-//     trim: z.optional(nullableString()),
-//     mileage: z.optional(mileage()),
-//     carModelName: z.optional(nullableString()),
-//     carBrandName: z.optional(nullableString()),
-// });
-
-// const PatchableAuctionSchema = z.object({
-//     carInformation: z.lazy(() => PatchableCarInformationSchema),
-// });
-
-// export function parseAuctionPatchData(obj: any) {
-//     return PatchableAuctionSchema.parse(obj);
-// }
-// export type AuctionPatchData = z.infer<typeof PatchableAuctionSchema>;
+const PatchableAuctionSchema = z.object({
+    carInformation: z.lazy(() => AuctionCarInformationSchema.partial()),
+    contactDetails: z.lazy(() => AuctionContactDetailsSchema.partial()),
+});
+export function parseAuctionPatchData(obj: any) {
+    return PatchableAuctionSchema.parse(obj);
+}
+export type AuctionPatchData = z.infer<typeof PatchableAuctionSchema>;

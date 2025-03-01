@@ -1,54 +1,7 @@
-import type {
-    AuctionCarInformationDto,
-    AuctionContactDetailsDto,
-} from "../dto/auction";
 import { AuctionState, type PrismaClient, ImageGroup } from "@prisma/client";
 
 export default class AuctionRepository {
     constructor(private prisma: PrismaClient) {}
-
-    public createWithStateSubmitted = async (
-        sellerId: string,
-        carInformationDto: AuctionCarInformationDto,
-        contactDetailsDto: AuctionContactDetailsDto
-    ) => {
-        return this.prisma.$transaction(async (tx) => {
-            // Create car information table row
-            const { id: carInformationId } =
-                await tx.auctionCarInformation.create({
-                    data: {
-                        ...carInformationDto,
-                    },
-                });
-
-            // Create contact details table row
-            const { id: contactDetailsId } = await tx.contactDetails.create({
-                data: {
-                    ...contactDetailsDto,
-                },
-            });
-
-            // Create auction table row
-            const auction = await tx.auction.create({
-                data: {
-                    state: AuctionState.SUBMITTED,
-                    sellerId,
-                    carInformationId,
-                    contactDetailsId,
-                },
-            });
-
-            // Fill in the auctionId in the AuctionCarInformation schema
-            await tx.auctionCarInformation.update({
-                where: { id: carInformationId },
-                data: {
-                    auctionId: auction.id,
-                },
-            });
-
-            return auction;
-        });
-    };
 
     public findAllWhereStateIsSubmittedOrUnder_ReviewLimit10OrderByUpdatedAtIncludeAll =
         async () => {

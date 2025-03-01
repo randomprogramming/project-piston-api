@@ -19,6 +19,49 @@ import { Err, Ok, type Result } from "../result";
 export default class AuctionRepository2 {
     constructor(private prisma: PrismaClient) {}
 
+    public submit = async (
+        sellerId: string,
+        carInformationDto: AuctionCarInformationDto,
+        contactDetailsDto: AuctionContactDetailsDto
+    ) => {
+        return this.prisma.$transaction(async (tx) => {
+            // Create car information table row
+            const { id: carInformationId } =
+                await tx.auctionCarInformation.create({
+                    data: {
+                        ...carInformationDto,
+                    },
+                });
+
+            // Create contact details table row
+            const { id: contactDetailsId } = await tx.contactDetails.create({
+                data: {
+                    ...contactDetailsDto,
+                },
+            });
+
+            // Create auction table row
+            const auction = await tx.auction.create({
+                data: {
+                    state: AuctionState.SUBMITTED,
+                    sellerId,
+                    carInformationId,
+                    contactDetailsId,
+                },
+            });
+
+            // Fill in the auctionId in the AuctionCarInformation schema
+            await tx.auctionCarInformation.update({
+                where: { id: carInformationId },
+                data: {
+                    auctionId: auction.id,
+                },
+            });
+
+            return auction;
+        });
+    };
+
     /**
      * This method by defaults includes only LIVE auctions where the endDate has not been reached yet, i.e. auctions which can be bid on
      */
