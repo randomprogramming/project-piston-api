@@ -98,29 +98,13 @@ export default class AuctionService {
     };
 
     public getAuctionsPaginated = async (q: PaginatedAuctionQueryDto) => {
-        return this.auctionRepo.findManyBasicPaginated(q);
+        return this.auctionRepo.findManyLiveBasicPaginated(q);
     };
 
     public getAuctionsOfSeller = async (sellerId: string) => {
-        // TODO: Use auctionRepo.findManyBasicPaginated here
-        return this.auctionRepo.findMany(
-            { sellerId },
-            {
-                include: {
-                    carInformation: true,
-                    contactDetails: true,
-                    media: {
-                        where: {
-                            group: ImageGroup.EXTERIOR,
-                        },
-                        orderBy: {
-                            order: "asc",
-                        },
-                        take: 1,
-                    },
-                },
-            }
-        );
+        return this.auctionRepo.findManyFullPaginated({
+            sellerId,
+        });
     };
 
     /**

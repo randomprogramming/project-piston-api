@@ -22,7 +22,9 @@ export default class AuctionRepository2 {
     /**
      * This method by defaults includes only LIVE auctions where the endDate has not been reached yet, i.e. auctions which can be bid on
      */
-    public async findManyBasicPaginated(whereParam?: Prisma.AuctionWhereInput) {
+    public async findManyLiveBasicPaginated(
+        whereParam?: Prisma.AuctionWhereInput
+    ) {
         // TODO: In the filters include a "ended", "not_started" fields, based on which we will include LIVE auctions which have either not yet started or already ended
         const where: Prisma.AuctionWhereInput = {
             state: AuctionState.LIVE,
@@ -82,6 +84,42 @@ export default class AuctionRepository2 {
                         },
                     },
                     media,
+                },
+                where,
+                take: 24,
+                skip: 0,
+            }),
+            this.prisma.auction.count({
+                where,
+            }),
+        ]);
+
+        return { auctions, totalCount };
+    }
+
+    public async findManyFullPaginated(whereParam?: Prisma.AuctionWhereInput) {
+        const where: Prisma.AuctionWhereInput = {
+            ...whereParam,
+        };
+
+        const [auctions, totalCount] = await Promise.all([
+            this.prisma.auction.findMany({
+                include: {
+                    carInformation: {
+                        include: {
+                            city: true,
+                        },
+                    },
+                    contactDetails: true,
+                    media: {
+                        where: {
+                            group: ImageGroup.EXTERIOR,
+                        },
+                        orderBy: {
+                            order: "asc",
+                        },
+                        take: 1,
+                    },
                 },
                 where,
                 take: 24,

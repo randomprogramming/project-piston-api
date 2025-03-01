@@ -82,11 +82,14 @@ export default class AuctionRouter extends BaseRouter {
         // Also, this will be "public" data which can be seen by anyone, so use a mapper to return onmly
         // some data
         // if req.query.sellerId === req.user.id, we can return some extra data.
-        const auctions = await this.auctionService.getAuctionsOfSeller(
+        const paginatedResponse = await this.auctionService.getAuctionsOfSeller(
             req.user!.id
         );
 
-        res.json(auctions);
+        res.json({
+            data: paginatedResponse.auctions,
+            count: paginatedResponse.totalCount,
+        });
     };
 
     public getPreview = async (req: Request, res: Response) => {
