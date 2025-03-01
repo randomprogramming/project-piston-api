@@ -42,15 +42,14 @@ export default class ResponseErrorMessageBuilder {
         return this;
     }
 
-    // TODO: Split this into two functions, one which takes just msg and one which takes step and msg
-    public log(step?: string, msg?: string) {
+    public log(msg: string): this;
+    public log(msg: string, step: string): this;
+    public log(msg: string, step?: string): this {
         let logMsg = "ResponseErrorMessageBuilder::" + this.getMessage();
         if (step) {
             logMsg += "@" + step;
         }
-        if (msg) {
-            logMsg += " | " + msg;
-        }
+        logMsg += " | " + msg;
 
         logger.error(logMsg);
         return this;

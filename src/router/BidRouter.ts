@@ -35,10 +35,10 @@ export default class BidRouter extends BaseRouter {
             return ResponseErrorMessageBuilder.bid()
                 .addDetail(bidResult.error)
                 .log(
-                    "placeBid",
                     `Bid by '${req.user!.id}' 
                     bidding  on auction '${auctionId}' failed!
-                    Reason: '${bidResult.error}'`
+                    Reason: '${bidResult.error}'`,
+                    "placeBid"
                 )
                 .send(res);
         }

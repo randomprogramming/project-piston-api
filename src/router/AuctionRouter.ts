@@ -106,8 +106,8 @@ export default class AuctionRouter extends BaseRouter {
             return ResponseErrorMessageBuilder.auction()
                 .addDetail(id, "not_found")
                 .log(
-                    "getPreview",
-                    `Auction defined: '${!!auction}', maySeePreview: '${maySeePreview}'`
+                    `Auction defined: '${!!auction}', maySeePreview: '${maySeePreview}'`,
+                    "getPreview"
                 )
                 .send(res, HttpStatus.NotFound);
         }
@@ -122,7 +122,7 @@ export default class AuctionRouter extends BaseRouter {
         if (!auction) {
             return ResponseErrorMessageBuilder.auction()
                 .addDetail("not_found")
-                .log("getAuction", `Auction '${prettyId}' not found`)
+                .log(`Auction '${prettyId}' not found`, "getAuction")
                 .send(res, HttpStatus.NotFound);
         }
 
@@ -166,8 +166,8 @@ export default class AuctionRouter extends BaseRouter {
             return ResponseErrorMessageBuilder.auction()
                 .addDetail(result.error)
                 .log(
-                    "acceptSubbmittedAuction",
-                    `Failed to accept submitted auction because '${result.error}' for auction id: '${id}'`
+                    `Failed to accept submitted auction because '${result.error}' for auction id: '${id}'`,
+                    "acceptSubbmittedAuction"
                 )
                 .send(res);
         }
@@ -188,8 +188,8 @@ export default class AuctionRouter extends BaseRouter {
             return ResponseErrorMessageBuilder.auction()
                 .addDetail(response.error)
                 .log(
-                    "addAuctionMedia",
-                    `Error when uploading auction media: '${response.error}'. Auction ID: '${id}'`
+                    `Error when uploading auction media: '${response.error}'. Auction ID: '${id}'`,
+                    "addAuctionMedia"
                 )
                 .send(res);
         }

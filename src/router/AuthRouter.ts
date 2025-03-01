@@ -83,7 +83,7 @@ export default class AuthRouter extends BaseRouter {
             if (!account) {
                 return ResponseErrorMessageBuilder.account()
                     .addDetail("email", "not_found")
-                    .log("login", `Email not found '${hideEmail(handle)}'`)
+                    .log(`Email not found '${hideEmail(handle)}'`, "login")
                     .send(res);
             }
         } else {
@@ -93,7 +93,7 @@ export default class AuthRouter extends BaseRouter {
             if (!account) {
                 return ResponseErrorMessageBuilder.account()
                     .addDetail("username", "not_found")
-                    .log("login", `Username not found '${handle}'`)
+                    .log(`Username not found '${handle}'`, "login")
                     .send(res);
             }
         }
@@ -111,7 +111,7 @@ export default class AuthRouter extends BaseRouter {
             const logHandle = handle.includes("@") ? hideEmail(handle) : handle;
             return ResponseErrorMessageBuilder.account()
                 .addDetail("email", "not_found") // Tell the user the account is not found when password is wrong, to avoid email attacks
-                .log("login", `Invalid password for '${logHandle}'`)
+                .log(`Invalid password for '${logHandle}'`, "login")
                 .send(res);
         }
 

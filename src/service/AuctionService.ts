@@ -47,7 +47,8 @@ export default class AuctionService {
                 ResponseErrorMessageBuilder.auction()
                     .addDetail("dealerName", "missing")
                     .log(
-                        "contactDetails is DEALER, but dealerName isn't supplied."
+                        "contactDetails is DEALER, but dealerName isn't supplied.",
+                        "submitAuction"
                     )
                     .getMessage()
             );
@@ -55,7 +56,10 @@ export default class AuctionService {
             return Err(
                 ResponseErrorMessageBuilder.auction()
                     .addDetail("name", "missing")
-                    .log("contactDetails is PRIVATE, but nane isn't supplied.")
+                    .log(
+                        "contactDetails is PRIVATE, but nane isn't supplied.",
+                        "submitAuction"
+                    )
                     .getMessage()
             );
         }
@@ -80,7 +84,7 @@ export default class AuctionService {
             return Err(
                 ResponseErrorMessageBuilder.auction()
                     .addDetail("not_found")
-                    .log(`Couldn't find auction '${id}'`)
+                    .log(`Couldn't find auction '${id}'`, "auctionGoLive")
                     .getMessage()
             );
         }
@@ -90,7 +94,8 @@ export default class AuctionService {
                 ResponseErrorMessageBuilder.auction()
                     .addDetail("invalid_state")
                     .log(
-                        `Expected state UNDER_REVIEW, found '${auction.state}'`
+                        `Expected state UNDER_REVIEW, found '${auction.state}'`,
+                        "auctionGoLive"
                     )
                     .getMessage()
             );
