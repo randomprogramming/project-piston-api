@@ -63,13 +63,13 @@ export default class AuctionRouter extends BaseRouter {
         const auctionId = parseId(req.params);
         const patchableAuctionDto = parseAuctionPatchData(req.body);
 
-        const updatedAuction = await this.auctionService.editAuction(
+        await this.auctionService.editAuction(
             auctionId,
             req.user!.id,
             patchableAuctionDto,
             req.user!.role === Role.ADMIN
         );
-        res.status(200).json({ success: true, data: updatedAuction });
+        res.send();
     };
 
     public getAuctionsPaginated = async (req: Request, res: Response) => {
