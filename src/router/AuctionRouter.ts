@@ -33,6 +33,8 @@ export default class AuctionRouter extends BaseRouter {
             auth(),
             this.authenticateCloudinary
         );
+        // TODO: Shouldnt be auth? But then we might have to implement the anonymous strategy
+        // To have the user id present IF if it a authenticated user
         this.router.get("/seller/id/:id", auth(), this.getAuctionsBySellerId);
         this.router.post("/id/:id/media", auth(), this.addAuctionMedia);
         this.router.get("/id/:id/preview", auth(), this.getPreview);
@@ -63,12 +65,17 @@ export default class AuctionRouter extends BaseRouter {
         const auctionId = parseId(req.params);
         const patchableAuctionDto = parseAuctionPatchData(req.body);
 
-        await this.auctionService.editAuction(
+        const response = await this.auctionService.editAuction(
             auctionId,
             req.user!.id,
             patchableAuctionDto,
             req.user!.role === Role.ADMIN
         );
+
+        if (!response.ok) {
+            res.status(HttpStatus.BadRequest).send(response.error);
+            return;
+        }
         res.send();
     };
 
