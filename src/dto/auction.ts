@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { mileage, modelYear, nullableString } from "./sharedValidators";
+import { ContactType } from "@prisma/client";
 
 const AuctionCarInformationSchema = z.object({
     vin: z.string(),
@@ -16,13 +17,37 @@ export type AuctionCarInformationDto = z.infer<
     typeof AuctionCarInformationSchema
 >;
 
-// TODO: Make sure that name is present if type is PRIVATE and same for DEALER and dealerName
-const AuctionContactDetailsSchema = z.object({
-    name: nullableString(),
-    dealerName: nullableString(),
-    type: z.enum(["PRIVATE", "DEALER"]),
-    phone: z.string(),
-});
+const AuctionContactDetailsSchema = z
+    .object({
+        name: nullableString(),
+        dealerName: nullableString(),
+        type: z.nativeEnum(ContactType),
+        phone: z.string(),
+    })
+    .refine(
+        (data) => {
+            if (data.type === ContactType.PRIVATE) {
+                return !!data.name;
+            }
+            return true;
+        },
+        {
+            message: "error.name_required",
+            path: ["name"],
+        }
+    )
+    .refine(
+        (data) => {
+            if (data.type === ContactType.DEALER) {
+                return !!data.dealerName;
+            }
+            return true;
+        },
+        {
+            message: "error.dealer_name_required",
+            path: ["dealerName"],
+        }
+    );
 export type AuctionContactDetailsDto = z.infer<
     typeof AuctionContactDetailsSchema
 >;
