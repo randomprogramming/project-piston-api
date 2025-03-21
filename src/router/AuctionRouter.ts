@@ -126,7 +126,7 @@ export default class AuctionRouter extends BaseRouter {
 
         // The owner of the auction and any admin may see the preview
         const maySeePreview =
-            auction?.sellerId !== req.user!.id || req.user!.role === Role.ADMIN;
+            auction?.sellerId === req.user!.id || req.user!.role === Role.ADMIN;
         if (!auction || !maySeePreview) {
             return ResponseErrorMessageBuilder.auction()
                 .addDetail(id, "not_found")
