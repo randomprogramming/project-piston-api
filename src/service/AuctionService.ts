@@ -27,10 +27,19 @@ export default class AuctionService {
     private generatePrettyId = (info: Omit<AuctionCarInformation, "vin">) => {
         const nameArr: string[] = [];
         nameArr.push(info.modelYear.toString());
-        // TODO: Right now we are using user-entry brand and model because we don't have the system in place to
-        // Convert them from user entry to actual brand and model fields.. When we do, we should use that here
-        nameArr.push(info.ueCarBrand);
-        nameArr.push(info.ueCarModel);
+
+        if (info.carBrandName) {
+            nameArr.push(info.carBrandName);
+        } else {
+            nameArr.push(info.ueCarBrand);
+        }
+
+        if (info.carModelName) {
+            nameArr.push(info.carModelName);
+        } else {
+            nameArr.push(info.ueCarModel);
+        }
+
         if (info.trim?.length) {
             nameArr.push(info.trim);
         }
