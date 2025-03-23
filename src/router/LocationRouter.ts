@@ -8,6 +8,7 @@ export default class LocationRouter extends BaseRouter {
     constructor(private locationRepo: LocationRepository) {
         super(API_VERSION.V1, "/locations");
 
+        this.router.get("/country/auction-count", this.getAuctionCountByCountr);
         this.router.get("/city", auth(), this.searchCities);
     }
 
@@ -24,5 +25,13 @@ export default class LocationRouter extends BaseRouter {
                 };
             })
         );
+    };
+
+    public getAuctionCountByCountr = async (_req: Request, res: Response) => {
+        // TODO: Cache this
+        const autionCountByCountry =
+            await this.locationRepo.findLiveAuctionCountByCountry();
+
+        res.json(autionCountByCountry);
     };
 }

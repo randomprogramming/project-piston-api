@@ -1,4 +1,9 @@
-import type { PrismaClient } from "@prisma/client";
+import { type PrismaClient } from "@prisma/client";
+
+export interface CountryWithAuctionCount {
+    countryCode: string;
+    auctionCount: number;
+}
 
 export default class LocationRepository {
     constructor(private prisma: PrismaClient) {}
@@ -72,5 +77,21 @@ export default class LocationRepository {
         });
 
         return rankedCities.sort((a, b) => b.rank - a.rank).splice(0, 24);
+    };
+
+    /**
+     * Returns a list of countries and the amount of currently live auctions for that country
+     */
+    public findLiveAuctionCountByCountry = () => {
+        return this.prisma.$queryRaw<CountryWithAuctionCount[]>`
+            SELECT c."countryCode", COUNT(a.id)::int AS "auctionCount"
+            FROM "City" c
+            LEFT JOIN "AuctionCarInformation" a ON a."cityId" = c.id
+            LEFT JOIN "Auction" auction ON a."auctionId" = auction.id
+            WHERE auction.state = 'LIVE'
+            GROUP BY c."countryCode"
+            HAVING COUNT(a.id) > 0
+            ORDER BY "auctionCount" DESC;
+        `;
     };
 }
