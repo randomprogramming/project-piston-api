@@ -1,6 +1,7 @@
 import type {
     AuctionCarInformationDto,
     AuctionContactDetailsDto,
+    PaginatedAuctionQueryDto,
 } from "../dto/auction";
 import {
     AuctionState,
@@ -65,20 +66,25 @@ export default class AuctionRepository2 {
     /**
      * This method by defaults includes only LIVE auctions where the endDate has not been reached yet, i.e. auctions which can be bid on
      */
-    public async findManyLiveBasicPaginated(
-        whereParam?: Prisma.AuctionWhereInput
-    ) {
+    public async findManyLiveBasicPaginated(query?: PaginatedAuctionQueryDto) {
         // TODO: In the filters include a "ended", "not_started" fields, based on which we will include LIVE auctions which have either not yet started or already ended
         const where: Prisma.AuctionWhereInput = {
             state: AuctionState.LIVE,
             endDate: {
                 gt: new Date(),
             },
-            ...whereParam,
+            featured: query?.featured,
+            carInformation: {
+                city: {
+                    countryCode: {
+                        in: query?.countries,
+                    },
+                },
+            },
         };
 
         let media: Prisma.MediaFindManyArgs = {};
-        if (whereParam?.featured) {
+        if (query?.featured) {
             // For featured auctions, we have a couple of extra images to show, so we need to adapt the query
             media = {
                 where: {
@@ -130,6 +136,7 @@ export default class AuctionRepository2 {
                 },
                 where,
                 take: 24,
+                // TODO: Implement cursor based pagination...
                 skip: 0,
             }),
             this.prisma.auction.count({

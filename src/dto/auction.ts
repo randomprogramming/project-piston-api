@@ -44,6 +44,16 @@ const PaginatedAuctionQuerySchema = z.object({
         .transform((value) =>
             value === undefined ? undefined : value.toLowerCase() === "true"
         ),
+    countries: z
+        .string()
+        .optional()
+        .transform((value) =>
+            value
+                ? value
+                      .split(",")
+                      .map((country) => country.trim().toUpperCase())
+                : undefined
+        ),
 });
 export function parsePaginatedAuctionQuery(obj: any) {
     return PaginatedAuctionQuerySchema.parse(obj);
