@@ -71,11 +71,12 @@ export default class Server {
         this.bidService = new BidService(this.bidRepo, this.auctionRepo2);
         this.auctionService = new AuctionService(
             this.auctionRepo2,
-            this.mediaRepo
+            this.mediaRepo,
+            this.bidService
         );
     }
 
-    private setupMiddleware() {
+    private setUpMiddleware() {
         logger.info("Setting up middleware...");
 
         morgan.token("userId", function (req: Request) {
@@ -97,7 +98,7 @@ export default class Server {
         this.app.use(initAuthMiddleware(this.accountRepo));
     }
 
-    private setupRouters() {
+    private setUpRouters() {
         logger.info("Setting up routers...");
 
         const ALL_ROUTERS: BaseRouter[] = [
@@ -135,6 +136,36 @@ export default class Server {
         this.app.use(errorHandling());
     }
 
+    private setUpCronJobs() {
+        // @ts-expect-error: in development during hot-reloading, bun will rerun this piece of code every time,
+        // causing many jobs to be registered at the same time.. So we have to do this magic for now, saving it
+        // in a global variable which isn't reset on hot-reloads
+        // In an ideal scenario, this should probably be it's own service, or this should be some sort of a scheduled
+        // job or something with BullMQ, idk, but for now this will be OK
+        if (!globalThis.processEndedAuctionsJob) {
+            const processEndedAuctionsJob = async () => {
+                const start = new Date();
+                logger.info(
+                    `processEndedAuctionsJob started at ${start.toISOString()}`
+                );
+
+                await this.auctionService.processEndedAuctions();
+
+                const end = new Date();
+                const durationMs = end.getTime() - start.getTime();
+                logger.info(
+                    `processEndedAuctionsJob executed in ${durationMs}ms`
+                );
+
+                setTimeout(processEndedAuctionsJob, 30000);
+            };
+
+            // @ts-expect-error: see above
+            globalThis.processEndedAuctionsJob = processEndedAuctionsJob;
+            setTimeout(processEndedAuctionsJob, 30000);
+        }
+    }
+
     private listen() {
         this.httpServer.listen(PORT);
         logger.info(`Server started, listening on port ${PORT}`);
@@ -143,9 +174,10 @@ export default class Server {
     public run() {
         logger.info(`Starting server with NODE_ENV: '${NODE_ENV}'`);
 
-        this.setupMiddleware();
-        this.setupRouters();
+        this.setUpMiddleware();
+        this.setUpRouters();
         this.setUpErrorHandling();
+        this.setUpCronJobs();
         this.listen();
     }
 }

@@ -1,13 +1,14 @@
 import type { BidDto } from "../dto/bid";
 import type BidRepository from "../repository/BidRepository";
+import type AuctionRepository2 from "../repository/AuctionRepository2";
 import { Err, Ok, type Result } from "../result";
 import { AuctionState, type Bid } from "@prisma/client";
 import logger from "../logger";
-import type AuctionRepository2 from "../repository/AuctionRepository2";
 
 export default class BidService {
     constructor(
         private bidRepo: BidRepository,
+        // TODO: Should be using auctionService, not repo...
         private auctionRepo: AuctionRepository2
     ) {}
 
@@ -89,5 +90,21 @@ export default class BidService {
             pageSize: 0,
             count: 0,
         };
+    };
+
+    /**
+     * Find and flag the winning bid for the passed in auctionId
+     */
+    public markWinningBid = async (auctionId: string) => {
+        const bid = await this.getCurrentBidAndBidderForAuction(auctionId);
+
+        if (!bid) {
+            logger.info(`There was no winning bid for auction '${auctionId}'.`);
+            return;
+        }
+
+        // TODO: Check if Reserve price is met here...
+        logger.info(`Marking bid '${bid.id}' as the winning bid`);
+        return this.bidRepo.markAsWinningBid(bid.id);
     };
 }

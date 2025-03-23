@@ -80,4 +80,15 @@ export default class BidRepository {
             },
         });
     };
+
+    public markAsWinningBid = async (id: string) => {
+        return this.prisma.bid.update({
+            where: {
+                id,
+            },
+            data: {
+                isWinning: new Date(),
+            },
+        });
+    };
 }

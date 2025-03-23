@@ -6,6 +6,7 @@ import type {
 } from "../dto/auction";
 import type { MediaUploadDto } from "../dto/media";
 import type MediaRepository from "../repository/MediaRepository";
+import type BidService from "./BidService";
 import {
     AuctionState,
     ContactType,
@@ -21,7 +22,8 @@ import { FEATURED_AUCTIONS_COUNT } from "../env";
 export default class AuctionService {
     constructor(
         private auctionRepo: AuctionRepository2,
-        private mediaRepo: MediaRepository
+        private mediaRepo: MediaRepository,
+        private bidService: BidService
     ) {}
 
     private generatePrettyId = (info: Omit<AuctionCarInformation, "vin">) => {
@@ -244,5 +246,23 @@ export default class AuctionService {
             existingMediaCount
         );
         return Ok();
+    };
+
+    public processEndedAuctions = async () => {
+        const auctions = await this.auctionRepo.findAuctionsToEnd();
+
+        for (const auction of auctions) {
+            logger.info(`Marking auction '${auction.id}' as ENDED`);
+            const { count: updateCount } =
+                await this.auctionRepo.updateAuctionStateToEnded(auction.id);
+            if (updateCount === 0) {
+                logger.info(
+                    `Seems like the auction '${auction.id}' is alredy in the ENDED state, skipping it...`
+                );
+                continue;
+            }
+
+            await this.bidService.markWinningBid(auction.id);
+        }
     };
 }

@@ -461,4 +461,42 @@ export default class AuctionRepository2 {
             },
         });
     };
+
+    /**
+     * Finds auctions which should be in ENDED state, rather, whose endDate has passed
+     * One caveat, we check if the end date has passed by at least 5 seconds.
+     * This is to prevent any sort of funny shenanigans from happeninng with the system for preventing sniping
+     * and this system for ending auctions
+     */
+    public findAuctionsToEnd = async () => {
+        return this.prisma.auction.findMany({
+            where: {
+                endDate: {
+                    // TODO: Add a circuit breaker to the placing bid function, so that it NEVER exceeds 5 seconds
+                    // Or maybe 3 seconds?
+                    // Because if it does, then again we can have very weird situations where for instance
+                    // The auction ends at the same time when a person submits a new bid where the endTime was supposed to increase...
+                    lt: new Date(Date.now() - 5000),
+                },
+                state: AuctionState.LIVE,
+            },
+            take: 10,
+        });
+    };
+
+    /**
+     * Update the auction state to ENDED, this will only work for an auction in the LIVE state, this acts as sort of a
+     * optimistic lock, since we might have multiple processes trying to process and "close" an auction
+     */
+    public updateAuctionStateToEnded = async (id: string) => {
+        return this.prisma.auction.updateMany({
+            where: {
+                id,
+                state: AuctionState.LIVE,
+            },
+            data: {
+                state: AuctionState.ENDED,
+            },
+        });
+    };
 }

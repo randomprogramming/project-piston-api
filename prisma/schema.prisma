@@ -138,6 +138,12 @@ enum AuctionState {
   /// Auction has been rejected for some reason
   // TODO: We should somewhere save the reason why it was rejected
   REJECTED
+  /// Auction has ended, no more bids are allowed. Note that the auction might take some time in order to switch
+  /// to this state, as we have a background job which updates the auctions to this state, and it might not fire the exact
+  /// second when the auction actually ends. That's why you shouldn't use this as a source of truth, rather use the
+  /// auctions `endDate` field. Also note that `endDate` field can change, when the user submits a bid a few seconds before the
+  /// auction ends, the endTime will be updated to prevent auction sniping
+  ENDED
 }
 
 model Auction {
@@ -194,7 +200,11 @@ model Bid {
   id String @id @default(uuid())
 
   /// Euros stored as cents!
-  amount Int
+  amount    Int
+  /// The date when this bid was selected as the winning bid
+  // TODO: Add a migration file for a partial index, so that we add a database-level lock for only one winning bid
+  // to be allowed per auction.
+  isWinning DateTime?
 
   bidder    Account @relation(fields: [bidderId], references: [id])
   bidderId  String
