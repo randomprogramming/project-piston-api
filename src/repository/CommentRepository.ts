@@ -1,5 +1,5 @@
+import type { CommentDto } from "../dto/commentOrBid";
 import { Prisma, type PrismaClient } from "@prisma/client";
-import type { CommentDto } from "../dto/comment";
 
 export default class CommentRepository {
     constructor(private prisma: PrismaClient) {}
@@ -26,19 +26,15 @@ export default class CommentRepository {
         take: number,
         cursor?: string
     ) => {
-        const totalCountResult = await this.prisma.$queryRaw<
-            { count: bigint }[]
-        >`
-            SELECT COUNT(*) AS count
+        const countRes = await this.prisma.$queryRaw<{ count: number }[]>`
+            SELECT COUNT(*)::int AS count
             FROM (
                 SELECT "id", "createdAt" FROM "Comment" WHERE "auctionId" = ${auctionId}
                 UNION ALL
                 SELECT "id", "createdAt" FROM "Bid" WHERE "auctionId" = ${auctionId}
             ) AS total_entries
         `;
-
-        // bigint can't be serialzed?
-        const count = Number(totalCountResult[0]?.count || 0);
+        const count = countRes.at(0)?.count;
 
         const data = await this.prisma.$queryRaw`
             SELECT 

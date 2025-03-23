@@ -7,7 +7,8 @@ import { parseId } from "../dto/common";
 import { parseBidDto } from "../dto/bid";
 import ResponseErrorMessageBuilder from "./response/ResponseErrorMessageBuilder";
 import HttpStatus from "../HttpStatus";
-import { mapBid, mapBidAndBidder } from "./response/bidMapping";
+import { mapBid } from "./response/bidMapping";
+import logger from "../logger";
 
 export default class BidRouter extends BaseRouter {
     constructor(
@@ -24,6 +25,19 @@ export default class BidRouter extends BaseRouter {
     public placeBid = async (req: Request, res: Response) => {
         const auctionId = parseId(req.params);
         const bidDto = parseBidDto(req.body);
+
+        if (!req.user!.username) {
+            // TODO: Use a middleware instead of this. And there is another method somewher which also has a TODO
+            // for this withUsername middleware. (CommentRouter file)
+            return ResponseErrorMessageBuilder.bid()
+                .addDetail("missing_username")
+                .log(
+                    `User '${
+                        req.user!.id
+                    }' is trying to place a bid without a username!`
+                )
+                .send(res, HttpStatus.Unauthorized);
+        }
 
         const bidResult = await this.bidService.placeBid(
             req.user!.id,
@@ -43,9 +57,9 @@ export default class BidRouter extends BaseRouter {
                 .send(res);
         }
 
-        this.auctionWSService.emitNewCurrentBid(
+        this.auctionWSService.emitNewCommentOrBid(
             auctionId,
-            mapBid(bidResult.value, req.user!.username)
+            mapBid({ ...bidResult.value, username: req.user!.username })
         );
         res.status(HttpStatus.Created).send();
     };
@@ -72,6 +86,14 @@ export default class BidRouter extends BaseRouter {
             return;
         }
 
-        res.json(mapBidAndBidder(currentBid));
+        if (!currentBid.bidder.username) {
+            logger.error(`Bidder for bid '${currentBid.id}' has no username`);
+        }
+        res.json(
+            mapBid({
+                ...currentBid,
+                username: currentBid.bidder.username || "-",
+            })
+        );
     };
 }

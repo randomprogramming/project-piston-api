@@ -1,6 +1,5 @@
 import type { Server as SocketServer, Socket, Namespace } from "socket.io";
-import type { MappedBid } from "../../router/response/bidMapping";
-import type { CommentOrBid } from "../../dto/comment";
+import type { CommentOrBid } from "../../dto/commentOrBid";
 import logger from "../../logger";
 
 export default class AuctionWebSocketService {
@@ -25,11 +24,7 @@ export default class AuctionWebSocketService {
         });
     }
 
-    public emitNewCurrentBid(auctionId: string, data: MappedBid) {
-        this.socketNamespace.to(auctionId).emit("current_bid_update", data);
-    }
-
-    public emitNewComment(auctionId: string, data: CommentOrBid) {
-        this.socketNamespace.to(auctionId).emit("new_comment", data);
+    public emitNewCommentOrBid(auctionId: string, data: CommentOrBid) {
+        this.socketNamespace.to(auctionId).emit("new_comment_or_bid", data);
     }
 }

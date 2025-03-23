@@ -1,20 +1,12 @@
 import type { Bid } from "@prisma/client";
+import type { CommentOrBid } from "../../dto/commentOrBid";
 
-export function mapBidAndBidder(
-    bid: Bid & { bidder: { username: string | null } }
-) {
-    return mapBid(bid, bid.bidder.username);
-}
-
-export function mapBid(bid: Bid, bidderUsername: string | null) {
+export function mapBid(bid: Bid & { username: string }): CommentOrBid {
     return {
         id: bid.id,
-        amount: bid.amount,
-        bidder: {
-            username: bidderUsername,
-        },
+        content: bid.amount.toString(),
+        username: bid.username,
         createdAt: bid.createdAt,
+        type: "bid",
     };
 }
-
-export type MappedBid = ReturnType<typeof mapBid>;

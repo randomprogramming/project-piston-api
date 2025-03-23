@@ -4,7 +4,7 @@ import type AuctionWebSocketService from "../service/ws/AuctionWebSocketService"
 import BaseRouter, { API_VERSION } from "./BaseRouter";
 import { parseId } from "../dto/common";
 import { parsePaginationRequest } from "../dto/pagination";
-import { parseCommentDto } from "../dto/comment";
+import { parseCommentDto } from "../dto/commentOrBid";
 import HttpStatus from "../HttpStatus";
 import { auth } from "../util/auth/middleware";
 
@@ -29,7 +29,7 @@ export default class CommentRouter extends BaseRouter {
             commentDto
         );
 
-        this.auctionWSService.emitNewComment(auctionId, {
+        this.auctionWSService.emitNewCommentOrBid(auctionId, {
             id: newComment.id,
             // TODO: Make sure username is not null with a "needsUsername" middleware
             username: req.user!.username!,
