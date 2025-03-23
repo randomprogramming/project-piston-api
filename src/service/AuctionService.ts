@@ -262,7 +262,36 @@ export default class AuctionService {
                 continue;
             }
 
-            await this.bidService.markWinningBid(auction.id);
+            // Retry mechanism for marking the winning bid
+            let retryCount = 0;
+            let success = false;
+            while (retryCount < 3 && !success) {
+                try {
+                    await this.bidService.markWinningBid(auction.id);
+                    success = true;
+                } catch (error) {
+                    retryCount++;
+                    logger.warn(
+                        `Failed to mark winning bid for auction '${
+                            auction.id
+                        }' (Attempt ${retryCount}/3). Error: ${JSON.stringify(
+                            error
+                        )}`
+                    );
+
+                    if (retryCount < 3) {
+                        logger.warn(`Retrying in 2 seconds...`);
+                        await new Promise((resolve) =>
+                            setTimeout(resolve, 2000)
+                        );
+                    } else {
+                        // TODO: Send email or raise alert here!
+                        logger.error(
+                            `Failed to mark winning bid after 3 attempts for auction '${auction.id}'`
+                        );
+                    }
+                }
+            }
         }
     };
 }
