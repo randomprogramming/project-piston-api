@@ -101,7 +101,12 @@ export function mapBasicAuction(a: BasicAuction) {
             },
         },
         currentBid:
-            a.bids.length > 0 ? { amount: a.bids[0].amount } : undefined,
+            a.bids.length > 0
+                ? {
+                      amount: a.bids[0].amount,
+                      username: a.bids[0].bidder.username,
+                  }
+                : undefined,
         coverPhoto: a.media.length > 0 ? a.media[0].url : undefined,
         media: a.media,
     };
