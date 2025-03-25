@@ -21,9 +21,9 @@ export default class BidService {
             `User '${bidderId}' bidding '${bidDto.amount}' cents on auction '${auctionId}'`
         );
 
-        const bidResult = await this.bidRepo.asTransaction<Result<Bid, string>>(
+        const bidResult = await this.bidRepo.asTxn<Result<Bid, string>>(
             async (tx) => {
-                const auction = await this.auctionRepo.findByIdLockRow(
+                const auction = await this.auctionRepo.findByIdLockRowTxn(
                     tx,
                     auctionId
                 );
@@ -43,20 +43,23 @@ export default class BidService {
                 }
                 // TODO: If time until end is less than ~5 mins? or something, we need to extend the auction to prevent sniping
 
-                const currentBid = await this.getCurrentBidForAuction(
-                    auctionId
-                );
+                const currentBid =
+                    await this.bidRepo.findCurrentBidForAuctionTxn(
+                        tx,
+                        auctionId
+                    );
                 if (currentBid && bidDto.amount <= currentBid.amount) {
                     return Err("amount_too_small");
                 }
-                const newBid = await this.bidRepo.createForAuction(
+
+                const newBid = await this.bidRepo.createForAuctionTxn(
+                    tx,
                     auctionId,
                     bidderId,
-                    bidDto,
-                    tx
+                    bidDto
                 );
                 if (!newBid) {
-                    return Err("bid_failed");
+                    return Err("failed_to_create_bid");
                 }
 
                 return Ok(newBid);
@@ -64,13 +67,6 @@ export default class BidService {
         );
 
         return bidResult;
-    };
-
-    /**
-     * Current Bid is the bid with the highest amount on an auction
-     */
-    public getCurrentBidForAuction = async (auctionId: string) => {
-        return this.bidRepo.findCurrentBidForAuction(auctionId);
     };
 
     public getCurrentBidAndBidderForAuction = async (auctionId: string) => {

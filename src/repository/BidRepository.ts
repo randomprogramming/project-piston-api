@@ -4,24 +4,19 @@ import type { BidDto } from "../dto/bid";
 export default class BidRepository {
     constructor(private prisma: PrismaClient) {}
 
-    public async asTransaction<T>(
-        fn: (tx: Prisma.TransactionClient) => Promise<T>
+    public async asTxn<T>(
+        fn: (txn: Prisma.TransactionClient) => Promise<T>
     ): Promise<T> {
         return this.prisma.$transaction(fn);
     }
 
-    public createForAuction = async (
+    public createForAuctionTxn = async (
+        txn: Prisma.TransactionClient,
         auctionId: string,
         bidderId: string,
-        dto: BidDto,
-        tx?: Prisma.TransactionClient
+        dto: BidDto
     ) => {
-        let client: PrismaClient | Prisma.TransactionClient = this.prisma;
-        if (tx) {
-            client = tx;
-        }
-
-        return client.bid.create({
+        return txn.bid.create({
             data: {
                 amount: dto.amount,
                 auctionId,
@@ -30,8 +25,11 @@ export default class BidRepository {
         });
     };
 
-    public findCurrentBidForAuction = async (auctionId: string) => {
-        return this.prisma.bid.findFirst({
+    public findCurrentBidForAuctionTxn = async (
+        txn: Prisma.TransactionClient,
+        auctionId: string
+    ) => {
+        return txn.bid.findFirst({
             where: {
                 auctionId,
             },

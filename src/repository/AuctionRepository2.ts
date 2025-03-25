@@ -334,12 +334,12 @@ export default class AuctionRepository2 {
      * This method locks the Auction row (pessimistic locking)
      * It uses FOR NO KEY UPDATE, so that you can still create rows in other tables with foreign keys in Auction (like Bids)
      */
-    public findByIdLockRow = async (
-        tx: Prisma.TransactionClient,
+    public findByIdLockRowTxn = async (
+        txn: Prisma.TransactionClient,
         id: string
     ): Promise<Auction | undefined> => {
         return (
-            await tx.$queryRaw<Auction[]>`
+            await txn.$queryRaw<Auction[]>`
                 SELECT * FROM "Auction" WHERE id = ${id} FOR NO KEY UPDATE
             `
         )[0];
