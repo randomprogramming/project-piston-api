@@ -80,6 +80,8 @@ export default class AuctionRepository2 {
                         in: query?.countries,
                     },
                 },
+                carBrandName: query?.brand,
+                carModelName: query?.model,
             },
         };
 

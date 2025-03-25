@@ -37,24 +37,33 @@ export function parseAuctionDto(obj: any) {
 }
 export type AuctionDto = z.infer<typeof AuctionSchema>;
 
-const PaginatedAuctionQuerySchema = z.object({
-    featured: z
-        .string()
-        .optional()
-        .transform((value) =>
-            value === undefined ? undefined : value.toLowerCase() === "true"
-        ),
-    countries: z
-        .string()
-        .optional()
-        .transform((value) =>
-            value
-                ? value
-                      .split(",")
-                      .map((country) => country.trim().toUpperCase())
-                : undefined
-        ),
-});
+const PaginatedAuctionQuerySchema = z
+    .object({
+        featured: z
+            .string()
+            .optional()
+            .transform((value) =>
+                value === undefined ? undefined : value.toLowerCase() === "true"
+            ),
+        countries: z
+            .string()
+            .optional()
+            .transform((value) =>
+                value
+                    ? value
+                          .split(",")
+                          .map((country) => country.trim().toUpperCase())
+                    : undefined
+            ),
+        brand: z.string().optional(),
+        model: z.string().optional(),
+    })
+    .superRefine((data) => {
+        // If 'model' is set but 'brand' is missing, set 'model' to undefined
+        if (data.model && !data.brand) {
+            data.model = undefined;
+        }
+    });
 export function parsePaginatedAuctionQuery(obj: any) {
     return PaginatedAuctionQuerySchema.parse(obj);
 }
