@@ -8,6 +8,7 @@ export default class BrandRouter extends BaseRouter {
         super(API_VERSION.V1, "/brands");
 
         this.router.get("/", this.getBrands);
+        this.router.get("/search", this.search);
         this.router.get("/:id/models", this.getModels);
     }
 
@@ -25,5 +26,13 @@ export default class BrandRouter extends BaseRouter {
         const models = await this.brandRepo.findManyModelsForBrand(brandName);
 
         res.json(models);
+    };
+
+    public search = async (req: Request, res: Response) => {
+        const q = parseQ(req.query);
+
+        const results = await this.brandRepo.search(q);
+
+        res.json(results);
     };
 }
