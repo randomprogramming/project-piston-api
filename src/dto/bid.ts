@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const BidDtoSchema = z.object({
     // In cents!
-    amount: z.coerce.number().int().min(0),
+    amount: z.coerce.number().int().min(1),
 });
 
 export function parseBidDto(obj: any) {

@@ -48,6 +48,9 @@ export default class BidService {
                         tx,
                         auctionId
                     );
+                if (bidDto.amount <= 0) {
+                    return Err("amount_too_small");
+                }
                 if (currentBid && bidDto.amount <= currentBid.amount) {
                     return Err("amount_too_small");
                 }
