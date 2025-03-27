@@ -29,6 +29,9 @@ import CommentRepository from "./repository/CommentRepository";
 import CommentRouter from "./router/CommentRouter";
 import BrandRepository from "./repository/BrandRepository";
 import BrandRouter from "./router/BrandRouter";
+import ConversationRepository from "./repository/ConversationRepository";
+import ConversationService from "./service/ConversationService";
+import ConversationRouter from "./router/ConversationRouter";
 
 export default class Server {
     private app: Express;
@@ -44,12 +47,14 @@ export default class Server {
     private locationRepo: LocationRepository;
     private commentRepo: CommentRepository;
     private brandRepo: BrandRepository;
+    private conversationRepo: ConversationRepository;
 
     private imageStorage: ImageStorage;
     private cloudinaryService: CloudinaryService;
     private websocketManager: WebSocketManager;
     private bidService: BidService;
     private auctionService: AuctionService;
+    private conversationService: ConversationService;
 
     constructor() {
         this.app = express();
@@ -64,6 +69,7 @@ export default class Server {
         this.locationRepo = new LocationRepository(this.prismaClient);
         this.commentRepo = new CommentRepository(this.prismaClient);
         this.brandRepo = new BrandRepository(this.prismaClient);
+        this.conversationRepo = new ConversationRepository(this.prismaClient);
 
         this.imageStorage = new LocalImageStorageService("/images/auctions");
         this.cloudinaryService = new CloudinaryService();
@@ -73,6 +79,9 @@ export default class Server {
             this.auctionRepo2,
             this.mediaRepo,
             this.bidService
+        );
+        this.conversationService = new ConversationService(
+            this.conversationRepo
         );
     }
 
@@ -116,6 +125,7 @@ export default class Server {
                 this.websocketManager.auctionWS()
             ),
             new BrandRouter(this.brandRepo),
+            new ConversationRouter(this.conversationService),
         ];
 
         for (const router of ALL_ROUTERS) {
