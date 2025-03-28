@@ -20,9 +20,9 @@ export default function errorHandling() {
             return;
         }
         if (err instanceof DbError) {
-            logger.error(`DbError: ${err.message}. Stack: '${err.stack}'`);
-            res.status(HttpStatus.InternalServerError);
-            return;
+            return ResponseErrorMessageBuilder.db()
+                .log(`DbError: ${err.message}. Stack: '${err.stack}'`)
+                .send(res, HttpStatus.InternalServerError);
         }
 
         logger.error(

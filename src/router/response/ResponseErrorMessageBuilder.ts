@@ -15,6 +15,9 @@ export default class ResponseErrorMessageBuilder {
     }
 
     // Static factory methods for specific categories
+    static db() {
+        return new ResponseErrorMessageBuilder("db");
+    }
     static account() {
         return new ResponseErrorMessageBuilder("account");
     }
