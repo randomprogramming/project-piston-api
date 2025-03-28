@@ -1,5 +1,46 @@
 import type ConversationRepository from "../repository/ConversationRepository";
+import type { ConversationDto } from "../dto/conversation";
+import { DbError } from "../exception";
 
 export default class ConversationService {
     constructor(private conversationRepo: ConversationRepository) {}
+
+    public createConversation = async (
+        creatorId: string,
+        conversationDto: ConversationDto
+    ) => {
+        const { participantIds, auctionId, initialMessageContent } =
+            conversationDto;
+
+        if (!participantIds.includes(creatorId)) {
+            participantIds.push(creatorId);
+        }
+        let conversation = await this.conversationRepo.findUnique(
+            participantIds,
+            auctionId
+        );
+        if (!conversation) {
+            conversation = await this.conversationRepo.createConversation(
+                participantIds,
+                auctionId
+            );
+        }
+        if (!conversation) {
+            throw new DbError(
+                `Unable to create conversation for auction '${auctionId}' with participants [${participantIds.join(
+                    ", "
+                )}]. Creator: '${creatorId}'. Initial message content length: ${
+                    initialMessageContent.length
+                }`
+            );
+        }
+
+        await this.conversationRepo.createMessage(
+            conversation.id,
+            creatorId,
+            initialMessageContent
+        );
+
+        return conversation;
+    };
 }

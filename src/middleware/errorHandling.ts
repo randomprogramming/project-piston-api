@@ -3,12 +3,13 @@ import logger from "../logger";
 import { ZodError } from "zod";
 import HttpStatus from "../HttpStatus";
 import ResponseErrorMessageBuilder from "../router/response/ResponseErrorMessageBuilder";
+import { DbError } from "../exception";
 
 export default function errorHandling() {
     return (err: Error, req: Request, res: Response, _next: NextFunction) => {
         if (err instanceof ZodError) {
             logger.error(
-                `Validation Error: ${err}.\nBody: '${JSON.stringify(
+                `ZodError: ${err}.\nBody: '${JSON.stringify(
                     req.body
                 )}'.\nEndpoint: '${req.path}'.\nParams: '${JSON.stringify(
                     req.params
@@ -16,6 +17,11 @@ export default function errorHandling() {
             );
 
             res.status(HttpStatus.BadRequest).json(err.errors);
+            return;
+        }
+        if (err instanceof DbError) {
+            logger.error(`DbError: ${err.message}. Stack: '${err.stack}'`);
+            res.status(HttpStatus.InternalServerError);
             return;
         }
 
