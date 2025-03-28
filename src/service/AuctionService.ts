@@ -54,28 +54,39 @@ export default class AuctionService {
     };
 
     public submitAuction = async (dto: AuctionDto, sellerId: string) => {
-        if (
-            dto.contactDetails.type === ContactType.DEALER &&
-            (dto.contactDetails.dealerName ?? "").length === 0
-        ) {
-            return Err(
-                ResponseErrorMessageBuilder.auction()
-                    .addDetail("dealerName", "missing")
-                    .log(
-                        "contactDetails is DEALER, but dealerName isn't supplied.",
-                        "submitAuction"
-                    )
-                    .getMessage()
-            );
-        } else if ((dto.contactDetails.name ?? "").length === 0) {
-            return Err(
-                ResponseErrorMessageBuilder.auction()
-                    .addDetail("name", "missing")
-                    .log(
-                        "contactDetails is PRIVATE, but nane isn't supplied.",
-                        "submitAuction"
-                    )
-                    .getMessage()
+        if (dto.contactDetails.type === ContactType.DEALER) {
+            if (
+                !dto.contactDetails.dealerName ||
+                dto.contactDetails.dealerName.length === 0
+            ) {
+                return Err(
+                    ResponseErrorMessageBuilder.auction()
+                        .addDetail("dealerName", "missing")
+                        .log(
+                            "contactDetails is DEALER, but dealerName isn't supplied.",
+                            "submitAuction"
+                        )
+                        .getMessage()
+                );
+            }
+        } else if (dto.contactDetails.type === ContactType.PRIVATE) {
+            if (
+                !dto.contactDetails.name ||
+                dto.contactDetails.name.length === 0
+            ) {
+                return Err(
+                    ResponseErrorMessageBuilder.auction()
+                        .addDetail("name", "missing")
+                        .log(
+                            "contactDetails is PRIVATE, but name isn't supplied.",
+                            "submitAuction"
+                        )
+                        .getMessage()
+                );
+            }
+        } else {
+            throw new Error(
+                `ContactType not supported: ${dto.contactDetails.type}`
             );
         }
 

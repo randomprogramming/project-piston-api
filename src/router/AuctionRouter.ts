@@ -92,6 +92,7 @@ export default class AuctionRouter extends BaseRouter {
 
     public submitAuction = async (req: Request, res: Response) => {
         const auctionDto = parseAuctionDto(req.body);
+        console.log(auctionDto);
 
         const response = await this.auctionService.submitAuction(
             auctionDto,
