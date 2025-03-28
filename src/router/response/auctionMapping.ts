@@ -14,6 +14,7 @@ interface FullAuction extends Auction {
     carInformation: AuctionCarInformationNoVin & { city: City };
     media: Media[];
     seller: {
+        id: string;
         username: string | null;
         createdAt: string | Date;
     };
@@ -43,6 +44,7 @@ export function mapAuction(a: FullAuction) {
             },
         },
         seller: {
+            id: a.seller.id,
             username: a.seller.username,
             createdAt: a.seller.createdAt,
         },

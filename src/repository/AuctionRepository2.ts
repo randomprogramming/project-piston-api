@@ -314,6 +314,7 @@ export default class AuctionRepository2 {
                 },
                 seller: {
                     select: {
+                        id: true,
                         username: true,
                         createdAt: true,
                     },
