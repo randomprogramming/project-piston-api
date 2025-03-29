@@ -10,18 +10,7 @@ export default class ConversationRouter extends BaseRouter {
         super(API_VERSION.V1, "/conversations");
 
         this.router.post("/", auth(), this.createConversation);
-
-        // this.router.get(
-        //     "/:id",
-        //     auth(),
-        //     async (req: Request, res: Response) => {}
-        // );
-
-        // this.router.get(
-        //     "/account/:accountId",
-        //     auth(),
-        //     async (req: Request, res: Response) => {}
-        // );
+        this.router.get("/", auth(), this.getConversationPreviews);
 
         // this.router.post(
         //     "/:id/messages",
@@ -45,5 +34,14 @@ export default class ConversationRouter extends BaseRouter {
         );
 
         res.status(HttpStatus.Created).send(conversation.id);
+    };
+
+    public getConversationPreviews = async (req: Request, res: Response) => {
+        const previews =
+            await this.conversationService.getConversationPreviewsForUser(
+                req.user!.id
+            );
+
+        res.json(previews);
     };
 }

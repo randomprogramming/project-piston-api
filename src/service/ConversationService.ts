@@ -47,4 +47,8 @@ export default class ConversationService {
 
         return conversation;
     };
+
+    public getConversationPreviewsForUser = async (accountId: string) => {
+        return this.conversationRepo.findPreviewsForAccount(accountId);
+    };
 }

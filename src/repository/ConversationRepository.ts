@@ -63,4 +63,67 @@ export default class ConversationRepository {
             },
         });
     };
+
+    // TODO: Needs Pagination...
+    /**
+     * Find previews of conversations where @param accountId is a participant.
+     * Conversation may not be tied to an auction, but if it is, we will return some basic info about the auction.
+     * Conversation are ordered by date of latest message descending (newest to oldest) [using raw SQL because prisma does not support this].
+     * If conversation has no messages, it takes the createdAt of the conversation as the "latest message".
+     */
+    public findPreviewsForAccount = async (accountId: string) => {
+        interface ConversationPreview {
+            id: string;
+            latestMessageDate: string;
+            latestMessageContent: string | null;
+            auctionCoverPhoto: string | null;
+            carInformationUeCarBrand: string | null;
+            carInformationUeCarModel: string | null;
+            carInformationModelYear: string | null;
+            carInformationTrim: string | null;
+            carInformationCarModelName: string | null;
+            carInformationCarBrandName: string | null;
+        }
+
+        // prettier-ignore
+        const conversations = await this.prisma.$queryRaw<ConversationPreview[]>`
+            WITH LatestMessages AS (
+                SELECT
+                    cm."conversationId",
+                    MAX(cm."createdAt") as "latestMessageDate"
+                FROM "ConversationMessage" cm
+                GROUP BY cm."conversationId"
+            )
+            SELECT 
+                c.id,
+                ci."ueCarBrand" as "carInformationUeCarBrand",
+                ci."ueCarModel" as "carInformationUeCarModel",
+                ci."modelYear" as "carInformationModelYear",
+                ci."trim" as "carInformationTrim",
+                ci."carModelName" as "carInformationCarModelName",
+                ci."carBrandName" as "carInformationCarBrandName",
+                COALESCE(lm."latestMessageDate", c."createdAt") as "latestMessageDate",
+                cm."content" as "latestMessageContent",
+                (SELECT
+                    am."url"
+                FROM "Media" am
+                WHERE am."group" = 'EXTERIOR'
+                ORDER BY am."order" ASC
+                LIMIT 1) as "auctionCoverPhoto"
+            FROM "Conversation" c
+            JOIN "Participant" p ON c.id = p."conversationId"
+            LEFT JOIN LatestMessages lm ON c.id = lm."conversationId"
+            LEFT JOIN "ConversationMessage" cm 
+                ON cm."conversationId" = c.id 
+                AND cm."createdAt" = lm."latestMessageDate"
+            LEFT JOIN "Auction" a
+                ON a.id = c."auctionId"
+            LEFT JOIN "AuctionCarInformation" ci
+                ON a."carInformationId" = ci.id
+            WHERE p."accountId" = ${accountId}
+            ORDER BY "latestMessageDate" DESC
+        `;
+
+        return conversations;
+    };
 }
