@@ -16,8 +16,6 @@ export default class ConversationService {
             `User '${creatorId}' creating conversation with ${participantIds.length} participants, for auction '${conversationDto?.auctionId}'`
         );
 
-        await new Promise((f) => setTimeout(f, 3000));
-
         if (!participantIds.includes(creatorId)) {
             participantIds.push(creatorId);
         }
