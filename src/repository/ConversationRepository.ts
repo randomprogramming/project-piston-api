@@ -150,6 +150,11 @@ export default class ConversationRepository {
                     id: true,
                     content: true,
                     createdAt: true,
+                    sender: {
+                        select: {
+                            username: true,
+                        },
+                    },
                 },
                 where,
                 orderBy: { createdAt: "desc" },
