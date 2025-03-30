@@ -10,7 +10,7 @@ export default class ConversationRepository {
         participantIds: string[],
         auctionId?: string | null
     ) => {
-        return this.prisma.conversation.findFirst({
+        const conversation = await this.prisma.conversation.findFirst({
             where: {
                 auctionId,
                 participants: {
@@ -20,7 +20,27 @@ export default class ConversationRepository {
                     none: { accountId: { notIn: participantIds } },
                 },
             },
+            include: {
+                _count: {
+                    select: {
+                        participants: true,
+                    },
+                },
+            },
         });
+
+        if (!conversation) {
+            return null;
+        }
+
+        // Different number of participants means not the same conversation!
+        if (participantIds.length !== conversation._count.participants) {
+            return null;
+        }
+
+        // Remove the _count property from returned entity...
+        const { _count, ...conversationDestruct } = conversation;
+        return conversationDestruct;
     };
 
     /**

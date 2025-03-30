@@ -12,13 +12,13 @@ export default class ConversationService {
     ) => {
         const { participantIds, auctionId, initialMessageContent } =
             conversationDto;
+        if (!participantIds.includes(creatorId)) {
+            participantIds.push(creatorId);
+        }
         logger.info(
             `User '${creatorId}' creating conversation with ${participantIds.length} participants, for auction '${conversationDto?.auctionId}'`
         );
 
-        if (!participantIds.includes(creatorId)) {
-            participantIds.push(creatorId);
-        }
         let conversation = await this.conversationRepo.findUnique(
             participantIds,
             auctionId
