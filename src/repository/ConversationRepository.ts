@@ -152,6 +152,7 @@ export default class ConversationRepository {
                     createdAt: true,
                     sender: {
                         select: {
+                            id: true,
                             username: true,
                         },
                     },
