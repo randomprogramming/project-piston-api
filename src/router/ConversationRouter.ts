@@ -51,7 +51,7 @@ export default class ConversationRouter extends BaseRouter {
 
         res.json({
             data: paginatedResponse.messages,
-            count: paginatedResponse.totalCount,
+            next: paginatedResponse.next,
         });
     };
 

@@ -187,30 +187,31 @@ export default class ConversationRepository {
             },
         };
 
-        const [messages, totalCount] = await Promise.all([
-            this.prisma.conversationMessage.findMany({
-                select: {
-                    id: true,
-                    content: true,
-                    createdAt: true,
-                    sender: {
-                        select: {
-                            id: true,
-                            username: true,
-                        },
+        const messages = await this.prisma.conversationMessage.findMany({
+            select: {
+                id: true,
+                content: true,
+                createdAt: true,
+                sender: {
+                    select: {
+                        id: true,
+                        username: true,
                     },
                 },
-                where,
-                orderBy: { createdAt: "desc" },
-                take: pageSize,
-                skip: cursor ? 1 : 0, // Skip the cursor item itself
-                cursor: cursor ? { id: cursor } : undefined,
-            }),
-            this.prisma.conversationMessage.count({
-                where,
-            }),
-        ]);
+            },
+            where,
+            orderBy: { createdAt: "desc" },
+            take: pageSize + 1, // Fetch one extra to check for next cursor
+            skip: cursor ? 1 : 0, // Skip the cursor item itself
+            cursor: cursor ? { id: cursor } : undefined,
+        });
 
-        return { messages, totalCount };
+        const hasNextPage = messages.length > pageSize;
+        const next = hasNextPage ? messages[pageSize].id : null;
+
+        return {
+            messages: hasNextPage ? messages.slice(0, pageSize) : messages,
+            next,
+        };
     };
 }
