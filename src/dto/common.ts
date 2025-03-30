@@ -20,3 +20,10 @@ const QSchema = z.object({
 export function parseQ(obj: any) {
     return QSchema.parse(obj).q;
 }
+
+const CursorSchema = z.object({
+    cursor: z.string().optional(),
+});
+export function parseCursor(obj: any) {
+    return CursorSchema.parse(obj).cursor;
+}

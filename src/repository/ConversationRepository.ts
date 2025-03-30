@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { Prisma, PrismaClient } from "@prisma/client";
 
 export default class ConversationRepository {
     constructor(private prisma: PrismaClient) {}
@@ -125,5 +125,43 @@ export default class ConversationRepository {
         `;
 
         return conversations;
+    };
+
+    public findConversationMessagesPaginated = async (
+        requestorId: string,
+        conversationId: string,
+        cursor?: string,
+        pageSize: number = 20
+    ) => {
+        const where: Prisma.ConversationMessageWhereInput = {
+            conversationId,
+            conversation: {
+                participants: {
+                    some: {
+                        accountId: requestorId,
+                    },
+                },
+            },
+        };
+
+        const [messages, totalCount] = await Promise.all([
+            this.prisma.conversationMessage.findMany({
+                select: {
+                    id: true,
+                    content: true,
+                    createdAt: true,
+                },
+                where,
+                orderBy: { createdAt: "desc" },
+                take: pageSize,
+                skip: cursor ? 1 : 0, // Skip the cursor item itself
+                cursor: cursor ? { id: cursor } : undefined,
+            }),
+            this.prisma.conversationMessage.count({
+                where,
+            }),
+        ]);
+
+        return { messages, totalCount };
     };
 }

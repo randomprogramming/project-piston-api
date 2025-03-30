@@ -51,4 +51,20 @@ export default class ConversationService {
     public getConversationPreviewsForUser = async (accountId: string) => {
         return this.conversationRepo.findPreviewsForAccount(accountId);
     };
+
+    /**
+     * Paginated function for fetching messages inside a conversation.
+     * Requires @param requestorId so that we know that the user is actually allowed to query for that conversation.
+     */
+    public getMessagesForConversationPaginated = async (
+        requestorId: string,
+        conversationId: string,
+        cursor?: string
+    ) => {
+        return this.conversationRepo.findConversationMessagesPaginated(
+            requestorId,
+            conversationId,
+            cursor
+        );
+    };
 }
