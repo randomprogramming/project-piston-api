@@ -1,10 +1,29 @@
 import type ConversationRepository from "../repository/ConversationRepository";
-import type { ConversationDto } from "../dto/conversation";
+import type { ConversationDto, MessageDto } from "../dto/conversation";
 import { DbError } from "../exception";
 import logger from "../logger";
 
 export default class ConversationService {
     constructor(private conversationRepo: ConversationRepository) {}
+
+    public sendMessage = async (
+        dto: MessageDto,
+        conversationId: string,
+        senderId: string
+    ) => {
+        const msg = await this.conversationRepo.createMessage(
+            dto.content,
+            conversationId,
+            senderId
+        );
+        if (!msg) {
+            throw new DbError(
+                `Failed to create msg with dto: '${JSON.stringify(dto)}'`
+            );
+        }
+
+        return msg;
+    };
 
     public createConversation = async (
         creatorId: string,

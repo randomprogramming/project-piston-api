@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
+import logger from "../logger";
 
 export default class ConversationRepository {
     constructor(private prisma: PrismaClient) {}
@@ -70,17 +71,35 @@ export default class ConversationRepository {
         });
     };
 
+    /**
+     * Check if a Participant with the given conversationId and accountId exists, and if it exists, creates a new message
+     */
     public createMessage = async (
+        content: string,
         conversationId: string,
-        senderId: string,
-        content: string
+        senderId: string
     ) => {
-        return this.prisma.conversationMessage.create({
-            data: {
-                conversationId,
-                senderId,
-                content,
-            },
+        return this.prisma.$transaction(async (txn) => {
+            const participant = await txn.participant.findFirst({
+                where: {
+                    accountId: senderId,
+                    conversationId,
+                },
+            });
+            if (!participant) {
+                logger.error(
+                    `User '${senderId}' trying to send message to conversation where doesn't exist or they are not a participant of: '${conversationId}'`
+                );
+                return;
+            }
+
+            return await txn.conversationMessage.create({
+                data: {
+                    conversationId,
+                    senderId,
+                    content,
+                },
+            });
         });
     };
 
