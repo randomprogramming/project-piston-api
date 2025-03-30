@@ -99,6 +99,14 @@ export default class ConversationRepository {
                     senderId,
                     content,
                 },
+                include: {
+                    sender: {
+                        select: {
+                            id: true,
+                            username: true,
+                        },
+                    },
+                },
             });
         });
     };

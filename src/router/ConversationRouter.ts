@@ -65,6 +65,14 @@ export default class ConversationRouter extends BaseRouter {
             req.user!.id
         );
 
-        res.status(HttpStatus.Created).send(msg.id);
+        res.status(HttpStatus.Created).json({
+            id: msg.id,
+            content: msg.content,
+            createdAt: msg.createdAt,
+            sender: {
+                id: msg.sender.id,
+                username: msg.sender.username,
+            },
+        });
     };
 }
