@@ -96,6 +96,7 @@ export default class ConversationRepository {
             id: string;
             latestMessageDate: string;
             latestMessageContent: string | null;
+            latestMessageSenderUsername: string | null;
             auctionCoverPhoto: string | null;
             carInformationUeCarBrand: string | null;
             carInformationUeCarModel: string | null;
@@ -124,6 +125,7 @@ export default class ConversationRepository {
                 ci."carBrandName" as "carInformationCarBrandName",
                 COALESCE(lm."latestMessageDate", c."createdAt") as "latestMessageDate",
                 cm."content" as "latestMessageContent",
+                sender."username" as "latestMessageSenderUsername",
                 (SELECT
                     am."url"
                 FROM "Media" am
@@ -136,6 +138,8 @@ export default class ConversationRepository {
             LEFT JOIN "ConversationMessage" cm 
                 ON cm."conversationId" = c.id 
                 AND cm."createdAt" = lm."latestMessageDate"
+            LEFT JOIN "Account" sender
+                ON sender."id" = cm."senderId"
             LEFT JOIN "Auction" a
                 ON a.id = c."auctionId"
             LEFT JOIN "AuctionCarInformation" ci
