@@ -59,9 +59,9 @@ export default class ConversationService {
         }
 
         await this.conversationRepo.createMessage(
+            initialMessageContent,
             conversation.id,
-            creatorId,
-            initialMessageContent
+            creatorId
         );
 
         return conversation;
