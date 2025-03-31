@@ -32,6 +32,7 @@ import BrandRouter from "./router/BrandRouter";
 import ConversationRepository from "./repository/ConversationRepository";
 import ConversationService from "./service/ConversationService";
 import ConversationRouter from "./router/ConversationRouter";
+import helmet from "helmet";
 
 export default class Server {
     private app: Express;
@@ -105,6 +106,7 @@ export default class Server {
         this.app.use(cors());
         this.app.use(express.json());
         this.app.use(initAuthMiddleware(this.accountRepo));
+        this.app.use(helmet());
     }
 
     private setUpRouters() {
