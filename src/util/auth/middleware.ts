@@ -4,6 +4,7 @@ import passport from "passport";
 import { AuthProvider, Role } from "@prisma/client";
 import { RequestNoUser } from "./exception";
 import HttpStatus from "../../HttpStatus";
+import ResponseErrorMessageBuilder from "../../router/response/ResponseErrorMessageBuilder";
 
 /**
  * Do not use this! This is exclusively used for initial authentication with Google OAuth.
@@ -52,4 +53,19 @@ export function hasRole(r: Role) {
 
 export function hasAdminRole() {
     return hasRole(Role.ADMIN);
+}
+
+// TODO: Use this everywhere where it needs to be used!!
+export function hasUsername() {
+    return [
+        auth(),
+        (req: Request, res: Response, next: NextFunction) => {
+            if (req.user?.username && req.user?.username.length > 0) {
+                return ResponseErrorMessageBuilder.account()
+                    .addDetail("username", "missing")
+                    .send(res, HttpStatus.Unauthorized);
+            }
+            next();
+        },
+    ];
 }
