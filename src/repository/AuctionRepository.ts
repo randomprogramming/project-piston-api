@@ -38,14 +38,6 @@ export default class AuctionRepository {
             });
         };
 
-    public findById = async (id: string) => {
-        return this.prisma.auction.findFirst({
-            where: {
-                id,
-            },
-        });
-    };
-
     public findByIdAndSellerId = async (id: string, sellerId: string) => {
         return this.prisma.auction.findFirst({
             where: {
@@ -69,34 +61,6 @@ export default class AuctionRepository {
         });
     };
 
-    public findByIdIncludeAll = async (id: string) => {
-        return this.prisma.auction.findFirst({
-            where: {
-                id,
-            },
-            include: {
-                carInformation: true,
-                contactDetails: true,
-                media: {
-                    orderBy: [
-                        {
-                            // TODO: Verify that this actually works, since group is an enum
-                            group: "asc",
-                        },
-                        {
-                            order: "asc",
-                        },
-                    ],
-                },
-                seller: {
-                    select: {
-                        username: true,
-                    },
-                },
-            },
-        });
-    };
-
     public updateStateById = async (id: string, newState: AuctionState) => {
         return this.prisma.auction.update({
             data: {
@@ -107,84 +71,4 @@ export default class AuctionRepository {
             },
         });
     };
-
-    public findBySellerIdIncludeAll = async (sellerId: string) => {
-        return this.prisma.auction.findMany({
-            where: {
-                sellerId,
-            },
-            include: {
-                carInformation: true,
-                contactDetails: true,
-                media: {
-                    orderBy: [
-                        {
-                            // TODO: Verify that this actually works, since group is an enum
-                            group: "asc",
-                        },
-                        {
-                            order: "asc",
-                        },
-                    ],
-                },
-            },
-        });
-    };
-
-    public findByPrettyIdIncludeCarInformationAndMediaAndSeller = async (
-        prettyId: string
-    ) => {
-        return this.prisma.auction.findUnique({
-            where: {
-                prettyId,
-            },
-            include: {
-                carInformation: true,
-                media: {
-                    orderBy: [
-                        {
-                            // TODO: Verify that this actually works, since group is an enum
-                            group: "asc",
-                        },
-                        {
-                            order: "asc",
-                        },
-                    ],
-                },
-                seller: {
-                    select: {
-                        username: true,
-                        createdAt: true,
-                    },
-                },
-            },
-        });
-    };
-
-    public findManyWhereStateLiveIncludeCarInformationAndCurrentBidAndCoverPhoto =
-        async () => {
-            return this.prisma.auction.findMany({
-                where: {
-                    state: AuctionState.LIVE,
-                },
-                include: {
-                    carInformation: true,
-                    bids: {
-                        orderBy: {
-                            amount: "desc",
-                        },
-                        take: 1,
-                    },
-                    media: {
-                        where: {
-                            group: ImageGroup.EXTERIOR,
-                        },
-                        orderBy: {
-                            order: "asc",
-                        },
-                        take: 1,
-                    },
-                },
-            });
-        };
 }
