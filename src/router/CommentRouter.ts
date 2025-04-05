@@ -6,7 +6,7 @@ import { parseId } from "../dto/common";
 import { parsePaginationRequest } from "../dto/pagination";
 import { parseCommentDto } from "../dto/commentOrBid";
 import HttpStatus from "../HttpStatus";
-import { auth } from "../util/auth/middleware";
+import { hasUsername } from "../util/auth/middleware";
 
 export default class CommentRouter extends BaseRouter {
     constructor(
@@ -15,7 +15,7 @@ export default class CommentRouter extends BaseRouter {
     ) {
         super(API_VERSION.V1, "/comments");
 
-        this.router.post("/auction/:id", auth(), this.submitComment);
+        this.router.post("/auction/:id", ...hasUsername(), this.submitComment);
         this.router.get("/auction/:id", this.getAuctionCommentsAndBids);
     }
 
@@ -31,7 +31,7 @@ export default class CommentRouter extends BaseRouter {
 
         this.auctionWSService.emitNewCommentOrBid(auctionId, {
             id: newComment.id,
-            // TODO: Make sure username is not null with a "needsUsername" middleware
+            auctionId: newComment.auctionId,
             username: req.user!.username!,
             content: newComment.content,
             createdAt: newComment.createdAt,

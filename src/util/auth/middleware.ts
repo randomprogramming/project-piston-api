@@ -60,7 +60,7 @@ export function hasUsername() {
     return [
         auth(),
         (req: Request, res: Response, next: NextFunction) => {
-            if (req.user?.username && req.user?.username.length > 0) {
+            if (!req.user?.username || req.user?.username.length === 0) {
                 return ResponseErrorMessageBuilder.account()
                     .addDetail("username", "missing")
                     .send(res, HttpStatus.Unauthorized);

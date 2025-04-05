@@ -16,6 +16,7 @@ export function parseCommentDto(obj: any) {
  */
 export interface CommentOrBid {
     id: string;
+    auctionId: string;
     content: string;
     username: string;
     createdAt: string | Date;

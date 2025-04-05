@@ -1,5 +1,6 @@
 import type BaseRouter from "./router/BaseRouter";
 import type { ImageStorage } from "./imagestorage/ImageStorage";
+import type IPubSubService from "./service/pubsub/IPubSubService";
 import express, { type Express, type Request } from "express";
 import cors from "cors";
 import morgan from "morgan";
@@ -33,6 +34,7 @@ import ConversationRepository from "./repository/ConversationRepository";
 import ConversationService from "./service/ConversationService";
 import ConversationRouter from "./router/ConversationRouter";
 import helmet from "helmet";
+import RedisPubSubService from "./service/pubsub/RedisPubSubService";
 
 export default class Server {
     private app: Express;
@@ -50,6 +52,7 @@ export default class Server {
     private brandRepo: BrandRepository;
     private conversationRepo: ConversationRepository;
 
+    private pubSubService: IPubSubService;
     private imageStorage: ImageStorage;
     private cloudinaryService: CloudinaryService;
     private websocketManager: WebSocketManager;
@@ -72,9 +75,13 @@ export default class Server {
         this.brandRepo = new BrandRepository(this.prismaClient);
         this.conversationRepo = new ConversationRepository(this.prismaClient);
 
+        this.pubSubService = new RedisPubSubService();
         this.imageStorage = new LocalImageStorageService("/images/auctions");
         this.cloudinaryService = new CloudinaryService();
-        this.websocketManager = new WebSocketManager(this.httpServer);
+        this.websocketManager = new WebSocketManager(
+            this.httpServer,
+            this.pubSubService
+        );
         this.bidService = new BidService(this.bidRepo, this.auctionRepo2);
         this.auctionService = new AuctionService(
             this.auctionRepo2,

@@ -57,7 +57,7 @@ export default class BidRouter extends BaseRouter {
                 .send(res);
         }
 
-        this.auctionWSService.emitNewCommentOrBid(
+        await this.auctionWSService.emitNewCommentOrBid(
             auctionId,
             mapBid({ ...bidResult.value, username: req.user!.username })
         );

@@ -39,6 +39,7 @@ export default class CommentRepository {
         const data = await this.prisma.$queryRaw`
             SELECT 
                 c."id", 
+                c."auctionId", 
                 c."content", 
                 a."username", 
                 c."createdAt", 
@@ -51,6 +52,7 @@ export default class CommentRepository {
 
             SELECT 
                 b."id", 
+                b."auctionId",
                 CAST(b."amount" AS TEXT) AS "content", 
                 a."username", 
                 b."createdAt", 
