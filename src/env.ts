@@ -84,3 +84,5 @@ export const FEATURED_AUCTIONS_COUNT = parseEnvInt(
     "FEATURED_AUCTIONS_COUNT",
     true
 );
+export const REDIS_HOST = parseEnvString("REDIS_HOST", true);
+export const REDIS_PORT = parseEnvInt("REDIS_PORT", true);

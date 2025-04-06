@@ -1,4 +1,5 @@
 import type IPubSubService from "./IPubSubService";
+import { REDIS_HOST, REDIS_PORT } from "../../env";
 import Redis from "ioredis";
 
 export default class RedisPubSubService implements IPubSubService {
@@ -6,8 +7,14 @@ export default class RedisPubSubService implements IPubSubService {
     private subscriber: Redis;
 
     constructor() {
-        this.publisher = new Redis();
-        this.subscriber = new Redis();
+        this.publisher = new Redis({
+            host: REDIS_HOST,
+            port: REDIS_PORT,
+        });
+        this.subscriber = new Redis({
+            host: REDIS_HOST,
+            port: REDIS_PORT,
+        });
     }
 
     public publish = async (
