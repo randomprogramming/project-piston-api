@@ -3,6 +3,7 @@ import type {
     AuctionContactDetailsDto,
     PaginatedAuctionQueryDto,
 } from "../dto/auction";
+import type { BasicAuction } from "./types";
 import {
     AuctionState,
     type Prisma,
@@ -11,6 +12,7 @@ import {
     ImageGroup,
 } from "@prisma/client";
 import { Err, Ok, type Result } from "../result";
+import { BASIC_AUCTION_SELECT } from "./select/auction";
 
 /**
  * This repo gives more control to the caller than the original auctionrepo, because the method names were getting stupidly long
@@ -20,6 +22,7 @@ import { Err, Ok, type Result } from "../result";
 export default class AuctionRepository2 {
     constructor(private prisma: PrismaClient) {}
 
+    // TODO: Why do we have a `submit` and a `create` method??
     public submit = async (
         sellerId: string,
         carInformationDto: AuctionCarInformationDto,
@@ -70,6 +73,9 @@ export default class AuctionRepository2 {
         // TODO: In the filters include a "ended", "not_started" fields, based on which we will include LIVE auctions which have either not yet started or already ended
         const where: Prisma.AuctionWhereInput = {
             state: AuctionState.LIVE,
+            // TODO: I don't think we want to limit by enddate,
+            // instead return all live auctions and on the frontend detect when current date is < endDate, and in that case
+            // show a "ENDING..." status. Remove endDate from everywhere in the app...
             endDate: {
                 gt: new Date(),
             },
@@ -85,57 +91,25 @@ export default class AuctionRepository2 {
             },
         };
 
-        let media: Prisma.MediaFindManyArgs = {};
-        if (query?.featured) {
-            // For featured auctions, we have a couple of extra images to show, so we need to adapt the query
-            media = {
-                where: {
-                    group: {
-                        in: [ImageGroup.EXTERIOR, ImageGroup.INTERIOR],
-                    },
-                },
-                orderBy: { order: "asc" },
-                take: 8,
-            };
-        } else {
-            media = {
-                where: { group: ImageGroup.EXTERIOR },
-                orderBy: { order: "asc" },
-                take: 1,
-            };
-        }
+        const select: typeof BASIC_AUCTION_SELECT = {
+            ...BASIC_AUCTION_SELECT,
+            // We need some extra media for the featured auctions
+            media: query?.featured
+                ? {
+                      where: {
+                          group: {
+                              in: [ImageGroup.EXTERIOR, ImageGroup.INTERIOR],
+                          },
+                      },
+                      orderBy: { order: "asc" },
+                      take: 8,
+                  }
+                : BASIC_AUCTION_SELECT.media,
+        };
 
-        const [auctions, totalCount] = await Promise.all([
+        const [auctions, totalCount] = (await Promise.all([
             this.prisma.auction.findMany({
-                select: {
-                    id: true,
-                    prettyId: true,
-                    endDate: true,
-                    startDate: true,
-                    state: true,
-                    carInformation: {
-                        // TODO: Omit VIN everywhere...
-                        omit: {
-                            vin: true,
-                        },
-                        include: {
-                            city: true,
-                        },
-                    },
-                    bids: {
-                        orderBy: { amount: "desc" },
-                        take: 1,
-                        select: {
-                            amount: true,
-                            bidder: {
-                                select: {
-                                    username: true,
-                                },
-                            },
-                        },
-                    },
-                    media,
-                },
+                select,
                 where,
                 take: 24,
                 // TODO: Implement cursor based pagination...
@@ -144,9 +118,58 @@ export default class AuctionRepository2 {
             this.prisma.auction.count({
                 where,
             }),
-        ]);
+        ])) as [unknown, unknown] as [BasicAuction[], number];
 
         return { auctions, totalCount };
+    }
+
+    /**
+     * Don't paginate live auctions, as there shouldn't be too many of them for one specific user
+     */
+    public async findLiveAuctionsForSeller(sellerId: string) {
+        return this.prisma.auction.findMany({
+            select: BASIC_AUCTION_SELECT,
+            where: {
+                state: AuctionState.LIVE,
+                sellerId,
+            },
+            orderBy: {
+                endDate: "asc",
+            },
+        }) as unknown as Promise<BasicAuction>;
+    }
+
+    // TODO: Can we rename and use findManyLiveBasicPaginated instead of this?
+    public async findEndedAuctionsForSellerPaginated(
+        sellerId: string,
+        cursorId?: string
+    ) {
+        const take = 10;
+
+        const results = await this.prisma.auction.findMany({
+            select: BASIC_AUCTION_SELECT,
+            where: {
+                state: AuctionState.ENDED,
+                sellerId,
+            },
+            orderBy: {
+                endDate: "asc",
+            },
+            take: take + 1,
+            cursor: cursorId ? { id: cursorId } : undefined,
+            skip: cursorId ? 1 : undefined, // skip the cursor itself
+        });
+
+        let next: string | null = null;
+        if (results.length > take) {
+            const nextItem = results.pop(); // remove the extra item
+            next = nextItem!.id;
+        }
+
+        return {
+            data: results as unknown as BasicAuction[],
+            next,
+        };
     }
 
     public async findManyFullPaginated(whereParam?: Prisma.AuctionWhereInput) {

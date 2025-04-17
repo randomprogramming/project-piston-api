@@ -22,3 +22,10 @@ const LoginData = z.object({
 export function parseLoginBody(obj: any) {
     return LoginData.parse(obj);
 }
+
+const UsernameSchema = z.object({
+    username: z.string(),
+});
+export function parseUsername(obj: any) {
+    return UsernameSchema.parse(obj).username;
+}

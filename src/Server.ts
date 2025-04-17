@@ -35,6 +35,8 @@ import ConversationService from "./service/ConversationService";
 import ConversationRouter from "./router/ConversationRouter";
 import helmet from "helmet";
 import RedisPubSubService from "./service/pubsub/RedisPubSubService";
+import AccountService from "./service/AccountService";
+import AccountRouter from "./router/AccountRouter";
 
 export default class Server {
     private app: Express;
@@ -59,6 +61,7 @@ export default class Server {
     private bidService: BidService;
     private auctionService: AuctionService;
     private conversationService: ConversationService;
+    private accountService: AccountService;
 
     constructor() {
         this.app = express();
@@ -90,6 +93,10 @@ export default class Server {
         );
         this.conversationService = new ConversationService(
             this.conversationRepo
+        );
+        this.accountService = new AccountService(
+            this.accountRepo,
+            this.auctionRepo2
         );
     }
 
@@ -135,6 +142,7 @@ export default class Server {
             ),
             new BrandRouter(this.brandRepo),
             new ConversationRouter(this.conversationService),
+            new AccountRouter(this.accountService),
         ];
 
         for (const router of ALL_ROUTERS) {

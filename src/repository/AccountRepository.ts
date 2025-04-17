@@ -83,4 +83,15 @@ export default class AccountRepository {
             },
         });
     };
+
+    public findByUsernameCaseInsensitive = (username: string) => {
+        return this.prisma.account.findFirst({
+            where: {
+                username: {
+                    equals: username,
+                    mode: "insensitive",
+                },
+            },
+        });
+    };
 }
