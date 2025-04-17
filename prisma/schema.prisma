@@ -69,6 +69,46 @@ model CarModel {
   @@id([name, carBrandName])
 }
 
+enum CarTitle {
+  AccidentFree
+  AccidentVehicle
+  Repaired
+  Other
+}
+
+enum CarFuel {
+  Gasoline
+  Diesel
+  Electric
+  Hybrid
+  Other
+}
+
+enum CarTransmission {
+  Manual
+  Automatic
+  SemiAutomatic
+  Other
+}
+
+enum CarDrivetrain {
+  RWD
+  FWD
+  AWD
+}
+
+enum CarType {
+  Coupe
+  Sedan
+  Convertible
+  SUV
+  Hatchback
+  Wagon
+  Van
+  Truck
+  Other
+}
+
 /// The AuctionCarInformation model represents a set of data about the car, with a 1:1 relation to an Auction
 /// user-entered fields (`ueCarBrand` and `ueCarModel`) 
 /// verified fields (`carBrandName` and `carModelName`), which may 
@@ -79,16 +119,25 @@ model CarModel {
 model AuctionCarInformation {
   id String @id @default(uuid())
 
-  vin        String
+  vin           String
   /// user entry(ue) car brand, once the auction is verified, we either create that brand or we connect it a existing brand
-  ueCarBrand String
+  ueCarBrand    String
   /// user entry(ue) car model, once the auction is verified, we either create that model or we connect it a existing model
-  ueCarModel String
-  modelYear  Int
+  ueCarModel    String
+  modelYear     Int
   /// Exact trim of the model: GTI, GT3RS, Competition, etc.
-  trim       String?
+  trim          String?
   /// in km
-  mileage    Int
+  mileage       Int
+  title         CarTitle?
+  /// in hp
+  power         Int?
+  fuel          CarFuel?
+  transmission  CarTransmission?
+  drivetrain    CarDrivetrain?
+  type          CarType?
+  exteriorColor String?
+  interiorColor String?
 
   carModel     CarModel? @relation(fields: [carModelName, carBrandName], references: [name, carBrandName])
   carModelName String?

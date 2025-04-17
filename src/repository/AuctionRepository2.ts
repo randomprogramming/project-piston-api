@@ -312,6 +312,12 @@ export default class AuctionRepository2 {
                         vin: true,
                     },
                 },
+                contactDetails: {
+                    select: {
+                        type: true,
+                        dealerName: true,
+                    },
+                },
                 _count: {
                     select: {
                         bids: true,

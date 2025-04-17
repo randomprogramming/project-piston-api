@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { mileage, modelYear, nullableString } from "./sharedValidators";
-import { ContactType } from "@prisma/client";
+import {
+    ContactType,
+    CarFuel,
+    CarTitle,
+    CarTransmission,
+    CarDrivetrain,
+    CarType,
+} from "@prisma/client";
 
 const AuctionCarInformationSchema = z.object({
     vin: z.string(),
@@ -12,6 +19,14 @@ const AuctionCarInformationSchema = z.object({
     carModelName: nullableString(),
     carBrandName: nullableString(),
     cityId: z.string(),
+    title: z.nativeEnum(CarTitle).optional(),
+    power: z.coerce.number().int().nonnegative().optional(),
+    fuel: z.nativeEnum(CarFuel).optional(),
+    transmission: z.nativeEnum(CarTransmission).optional(),
+    drivetrain: z.nativeEnum(CarDrivetrain).optional(),
+    type: z.nativeEnum(CarType).optional(),
+    exteriorColor: z.string().max(120).optional(),
+    interiorColor: z.string().max(120).optional(),
 });
 export type AuctionCarInformationDto = z.infer<
     typeof AuctionCarInformationSchema

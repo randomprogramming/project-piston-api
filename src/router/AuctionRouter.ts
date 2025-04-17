@@ -35,6 +35,8 @@ export default class AuctionRouter extends BaseRouter {
         );
         // TODO: Shouldnt be auth? But then we might have to implement the anonymous strategy
         // To have the user id present IF if it a authenticated user
+        // TODO: We have this endpoint in account router now... but this will be different
+        // because it returns the vin and private data, and entire auction object, so idk, maybe use this but rename it to /mine or something
         this.router.get("/seller/id/:id", auth(), this.getAuctionsBySellerId);
         this.router.post("/id/:id/media", auth(), this.addAuctionMedia);
         this.router.get("/id/:id/preview", auth(), this.getPreview);

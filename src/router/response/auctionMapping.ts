@@ -2,8 +2,8 @@ import type {
     Auction,
     AuctionCarInformation,
     AuctionState,
-    Bid,
     City,
+    ContactType,
     ImageGroup,
     Media,
 } from "@prisma/client";
@@ -17,6 +17,10 @@ interface FullAuction extends Auction {
         id: string;
         username: string | null;
         createdAt: string | Date;
+    };
+    contactDetails: {
+        type: ContactType;
+        dealerName: string | null;
     };
     _count: {
         comments: number;
@@ -57,6 +61,10 @@ export function mapAuction(a: FullAuction) {
         })),
         bidCount: a._count.bids,
         commentCount: a._count.comments,
+        contactDetails: {
+            type: a.contactDetails.type,
+            dealerName: a.contactDetails.dealerName,
+        },
     };
 }
 
