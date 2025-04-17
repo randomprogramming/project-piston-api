@@ -40,7 +40,7 @@ export default class AccountService {
             username
         );
         if (!account) {
-            return [];
+            return { data: [], next: null };
         }
 
         return this.auctionRepo.findEndedAuctionsForSellerPaginated(

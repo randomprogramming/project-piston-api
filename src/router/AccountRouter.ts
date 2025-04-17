@@ -4,6 +4,7 @@ import BaseRouter, { API_VERSION } from "./BaseRouter";
 import { parseUsername } from "../dto/account";
 import HttpStatus from "../HttpStatus";
 import { parseCursor } from "../dto/common";
+import { mapBasicAuctions } from "./response/auctionMapping";
 
 export default class AccountRouter extends BaseRouter {
     constructor(private accountService: AccountService) {
@@ -41,13 +42,16 @@ export default class AccountRouter extends BaseRouter {
             cursor
         );
 
-        res.json(paginatedAuctions);
+        res.json({
+            data: mapBasicAuctions(paginatedAuctions.data),
+            next: paginatedAuctions.next,
+        });
     };
 
     public getAccountLiveAuctions = async (req: Request, res: Response) => {
         const username = parseUsername(req.params);
         const auctions = await this.accountService.getLiveAuctions(username);
 
-        res.json(auctions);
+        res.json(mapBasicAuctions(auctions));
     };
 }

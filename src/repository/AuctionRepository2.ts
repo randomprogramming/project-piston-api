@@ -130,7 +130,7 @@ export default class AuctionRepository2 {
             orderBy: {
                 endDate: "asc",
             },
-        }) as unknown as Promise<BasicAuction>;
+        }) as unknown as Promise<BasicAuction[]>;
     }
 
     // TODO: Can we rename and use findManyLiveBasicPaginated instead of this?
