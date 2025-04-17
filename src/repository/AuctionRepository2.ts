@@ -73,12 +73,6 @@ export default class AuctionRepository2 {
         // TODO: In the filters include a "ended", "not_started" fields, based on which we will include LIVE auctions which have either not yet started or already ended
         const where: Prisma.AuctionWhereInput = {
             state: AuctionState.LIVE,
-            // TODO: I don't think we want to limit by enddate,
-            // instead return all live auctions and on the frontend detect when current date is < endDate, and in that case
-            // show a "ENDING..." status. Remove endDate from everywhere in the app...
-            endDate: {
-                gt: new Date(),
-            },
             featured: query?.featured,
             carInformation: {
                 city: {
