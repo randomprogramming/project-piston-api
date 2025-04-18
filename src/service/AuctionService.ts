@@ -10,6 +10,8 @@ import type BidService from "./BidService";
 import {
     AuctionState,
     ContactType,
+    Prisma,
+    type Auction,
     type AuctionCarInformation,
 } from "@prisma/client";
 import { Err, Ok, type Result } from "../result";
@@ -20,6 +22,8 @@ import { sanitizeURLString } from "../util/url";
 import { FEATURED_AUCTIONS_COUNT } from "../env";
 
 export default class AuctionService {
+    private readonly AUCTION_EXTENSION_CUTOFF_MS = 5 * 60 * 1000;
+
     constructor(
         private auctionRepo: AuctionRepository2,
         private mediaRepo: MediaRepository,
@@ -305,4 +309,45 @@ export default class AuctionService {
             }
         }
     };
+
+    public findByIdLockRowTxn = (txn: Prisma.TransactionClient, id: string) => {
+        return this.auctionRepo.findByIdLockRowTxn(txn, id);
+    };
+
+    /**
+     * Checks if an auctions end time needs to be updated, to prevent sniping.
+     * If it is, calculate new end time and update the auction.
+     */
+    public async extendAuctionEndTime(
+        tx: Prisma.TransactionClient,
+        auction: Auction,
+        now: Date
+    ) {
+        if (!auction.endDate) {
+            logger.error(
+                `Trying to extend auction which doesn't have end time, auction ID: '${auction.id}'`
+            );
+            return;
+        }
+
+        const timeRemaining = auction.endDate.getTime() - now.getTime();
+        if (timeRemaining >= this.AUCTION_EXTENSION_CUTOFF_MS) {
+            logger.info(
+                `Auction '${auction.id}' does not need extension. Remaining time (${timeRemaining}ms) is more than cutoff (${this.AUCTION_EXTENSION_CUTOFF_MS}ms)`
+            );
+            return;
+        }
+
+        const newEndDate = new Date(
+            auction.endDate.getTime() + this.AUCTION_EXTENSION_CUTOFF_MS
+        );
+        logger.info(
+            `Extending auction '${auction.id}' to '${newEndDate.toISOString()}'`
+        );
+        await this.auctionRepo.updateAuction(
+            auction.id,
+            { endDate: newEndDate },
+            tx
+        );
+    }
 }

@@ -348,9 +348,12 @@ export default class AuctionRepository2 {
 
     public async updateAuction(
         id: string,
-        data: Partial<Prisma.AuctionUpdateInput>
+        data: Partial<Prisma.AuctionUpdateInput>,
+        tx?: Prisma.TransactionClient
     ) {
-        return this.prisma.auction.update({
+        const client = tx || this.prisma;
+
+        return client.auction.update({
             where: { id },
             data,
         });

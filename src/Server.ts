@@ -85,12 +85,13 @@ export default class Server {
             this.httpServer,
             this.pubSubService
         );
-        this.bidService = new BidService(this.bidRepo, this.auctionRepo2);
+        this.bidService = new BidService(this.bidRepo, null!);
         this.auctionService = new AuctionService(
             this.auctionRepo2,
             this.mediaRepo,
             this.bidService
         );
+        this.bidService.setAuctionService(this.auctionService);
         this.conversationService = new ConversationService(
             this.conversationRepo
         );
