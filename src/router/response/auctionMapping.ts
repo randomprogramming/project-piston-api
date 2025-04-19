@@ -109,6 +109,8 @@ export function mapBasicAuction(a: BasicAuction) {
                 name: a.carInformation.city.name,
                 countryCode: a.carInformation.city.countryCode,
             },
+            fuel: a.carInformation.fuel,
+            transmission: a.carInformation.transmission,
         },
         currentBid:
             a.bids.length > 0
