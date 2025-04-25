@@ -64,6 +64,7 @@ function parseEnvURL(envName: string, required: boolean): URL | null {
 
 export const NODE_ENV = parseNodeEnv();
 export const PORT = parseEnvInt("PORT", false) || 8080;
+export const NODE_NAME = parseEnvString("NODE_NAME", false);
 export const JWT_COOKIE_NAME = parseEnvString("JWT_COOKIE_NAME", true);
 export const JWT_SECRET_KEY = parseEnvString("JWT_SECRET_KEY", true);
 export const GOOGLE_CLIENT_ID = parseEnvString("GOOGLE_CLIENT_ID", true);
